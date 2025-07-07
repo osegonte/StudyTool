@@ -1,7 +1,7 @@
 {
   "name": "study-planner-frontend",
-  "version": "1.0.0",
-  "description": "Local Study Planner - Frontend",
+  "version": "2.0.0",
+  "description": "Local Study Planner - Frontend Phase 2",
   "private": true,
   "dependencies": {
     "@csstools/normalize.css": "^12.1.1",
@@ -12,7 +12,11 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.0",
     "react-scripts": "5.0.1",
-    "sanitize.css": "^13.0.0"
+    "sanitize.css": "^13.0.0",
+    "date-fns": "^2.30.0",
+    "recharts": "^2.8.0",
+    "react-datepicker": "^4.21.0",
+    "react-hot-toast": "^2.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

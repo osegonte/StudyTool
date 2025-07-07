@@ -1,5 +1,5 @@
 
-> study-planner-backend@1.0.0 dev
+> study-planner-backend@2.0.0 dev
 > nodemon src/index.js
 
 [33m[nodemon] 2.0.22[39m
@@ -7,11 +7,8 @@
 [33m[nodemon] watching path(s): *.*[39m
 [33m[nodemon] watching extensions: js,mjs,json[39m
 [32m[nodemon] starting `node src/index.js`[39m
-🚀 Study Planner API running on port 3001
+🚀 Study Planner API Phase 2 running on port 3001
 📁 PDF storage: /Users/osegonte/StudyTool/data/pdfs
-[32m[nodemon] restarting child process[39m
-[32m[nodemon] starting `node src/index.js`[39m
-[32m[nodemon] restarting child process[39m
-[32m[nodemon] starting `node src/index.js`[39m
-🚀 Study Planner API running on port 3001
-📁 PDF storage: /Users/osegonte/StudyTool/data/pdfs
+📊 Database: /Users/osegonte/StudyTool/data/study-planner.db
+📊 Database connected successfully
+📋 Database tables created successfully

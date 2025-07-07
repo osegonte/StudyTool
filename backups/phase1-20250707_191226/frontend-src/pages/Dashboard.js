@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, Upload, Clock, FileText, BarChart3, Target } from 'lucide-react';
+import { BookOpen, Upload, Clock, FileText } from 'lucide-react';
 import axios from 'axios';
 
 const Dashboard = () => {
@@ -30,7 +30,7 @@ const Dashboard = () => {
 
       setStats({
         totalFiles: files.length,
-        totalTimeSpent: Math.round(totalTimeSpent / 60),
+        totalTimeSpent: Math.round(totalTimeSpent / 60), // Convert to minutes
         recentFiles: files.slice(0, 3)
       });
     } catch (error) {
@@ -42,7 +42,7 @@ const Dashboard = () => {
     <div className="dashboard">
       <header className="dashboard-header">
         <h1>📚 Local Study Planner</h1>
-        <p>Your personal study companion running on Mac Mini M4 - Phase 2</p>
+        <p>Your personal study companion running on Mac Mini M4</p>
       </header>
       
       <div className="dashboard-stats">
@@ -70,23 +70,17 @@ const Dashboard = () => {
             <p>Manage and organize your study materials</p>
           </Link>
           
-          <Link to="/analytics" className="dashboard-card analytics">
-            <BarChart3 size={48} />
-            <h3>Analytics</h3>
-            <p>View reading speed trends and study patterns</p>
-          </Link>
-          
-          <Link to="/goals" className="dashboard-card goals">
-            <Target size={48} />
-            <h3>Study Goals</h3>
-            <p>Set and track your learning objectives</p>
-          </Link>
-          
           <Link to="/files" className="dashboard-card">
             <Upload size={48} />
             <h3>Upload New PDF</h3>
             <p>Add new study materials</p>
           </Link>
+          
+          <div className="dashboard-card">
+            <Clock size={48} />
+            <h3>Study Progress</h3>
+            <p>Track your reading time and progress</p>
+          </div>
         </div>
 
         {stats.recentFiles.length > 0 && (

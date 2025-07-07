@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Home } from 'lucide-react';
-import StudyTimer from '../components/timer/StudyTimer';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Home, Clock } from 'lucide-react';
 import axios from 'axios';
 
 const PDFViewer = () => {
@@ -12,12 +11,16 @@ const PDFViewer = () => {
   const [scale, setScale] = useState(1.0);
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [sessionStartTime] = useState(Date.now());
   const [fileInfo, setFileInfo] = useState(null);
   const canvasRef = useRef(null);
 
   useEffect(() => {
     loadPDF();
     loadFileInfo();
+    // Auto-save progress every 30 seconds
+    const interval = setInterval(saveProgress, 30000);
+    return () => clearInterval(interval);
   }, [id]);
 
   useEffect(() => {
@@ -25,6 +28,13 @@ const PDFViewer = () => {
       renderPage();
     }
   }, [currentPage, scale, rotation, pdfDoc]);
+
+  // Save progress when component unmounts
+  useEffect(() => {
+    return () => {
+      saveProgress();
+    };
+  }, []);
 
   const loadPDF = async () => {
     try {
@@ -36,6 +46,7 @@ const PDFViewer = () => {
       setTotalPages(pdf.numPages);
       setLoading(false);
 
+      // Load saved progress
       try {
         const progressResponse = await axios.get(`http://localhost:3001/api/progress/${id}`);
         if (progressResponse.data.currentPage) {
@@ -83,6 +94,20 @@ const PDFViewer = () => {
     }
   };
 
+  const saveProgress = async () => {
+    const sessionTime = Math.floor((Date.now() - sessionStartTime) / 1000);
+    
+    try {
+      await axios.post(`http://localhost:3001/api/progress/${id}`, {
+        currentPage,
+        totalPages,
+        sessionTime
+      });
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
   const goToPage = (page) => {
     const newPage = Math.max(1, Math.min(totalPages, page));
     setCurrentPage(newPage);
@@ -92,14 +117,11 @@ const PDFViewer = () => {
   const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
   const rotate = () => setRotation(prev => (prev + 90) % 360);
 
-  const handleSessionEnd = (sessionData) => {
-    console.log('Session ended:', sessionData);
-  };
-
   if (loading) {
     return (
       <div className="pdf-viewer loading">
         <div className="loading-spinner">
+          <Clock size={48} />
           <p>Loading PDF...</p>
         </div>
       </div>
@@ -165,12 +187,6 @@ const PDFViewer = () => {
           </button>
         </div>
       </header>
-      
-      <StudyTimer 
-        fileId={id}
-        currentPage={currentPage}
-        onSessionEnd={handleSessionEnd}
-      />
       
       <div className="pdf-viewer-content">
         <div className="pdf-container">
