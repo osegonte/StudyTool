@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Target, Calendar, Clock, BookOpen, Trash2 } from 'lucide-react';
-import DatePicker from 'react-datepicker';
+import { Plus, Target, Calendar, Clock, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { goalsAPI, filesAPI, topicsAPI } from '../../services/api';
-import "react-datepicker/dist/react-datepicker.css";
+import { goalsAPI, filesAPI } from '../../services/api';
 
 const GoalsManager = () => {
   const [goals, setGoals] = useState([]);
   const [files, setFiles] = useState([]);
-  const [topics, setTopics] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -17,10 +14,9 @@ const GoalsManager = () => {
     description: '',
     targetType: 'daily_minutes',
     targetValue: 60,
-    startDate: new Date(),
-    endDate: null,
-    fileId: '',
-    topicId: ''
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    fileId: ''
   });
 
   useEffect(() => {
@@ -30,15 +26,13 @@ const GoalsManager = () => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [goalsRes, filesRes, topicsRes] = await Promise.all([
+      const [goalsRes, filesRes] = await Promise.all([
         goalsAPI.getAll(),
-        filesAPI.getAll(),
-        topicsAPI.getAll()
+        filesAPI.getAll()
       ]);
 
       setGoals(goalsRes.data);
       setFiles(filesRes.data);
-      setTopics(topicsRes.data);
     } catch (error) {
       console.error('Error loading goals data:', error);
       toast.error('Failed to load goals');
@@ -50,17 +44,16 @@ const GoalsManager = () => {
   const createGoal = async () => {
     try {
       await goalsAPI.create(newGoal);
-      toast.success('Goal created successfully!');
+      toast.success('Time-based goal created successfully!');
       setShowCreateForm(false);
       setNewGoal({
         title: '',
         description: '',
         targetType: 'daily_minutes',
         targetValue: 60,
-        startDate: new Date(),
-        endDate: null,
-        fileId: '',
-        topicId: ''
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: '',
+        fileId: ''
       });
       loadData();
     } catch (error) {
@@ -85,7 +78,6 @@ const GoalsManager = () => {
   const getGoalTypeIcon = (type) => {
     switch (type) {
       case 'daily_minutes': return <Clock size={20} />;
-      case 'pages_per_day': return <BookOpen size={20} />;
       case 'completion_date': return <Calendar size={20} />;
       default: return <Target size={20} />;
     }
@@ -109,15 +101,15 @@ const GoalsManager = () => {
     <div className="goals-manager">
       <header className="goals-header">
         <div>
-          <h1>🎯 Study Goals</h1>
-          <p>Set and track your learning objectives</p>
+          <h1>🎯 Study Goals - Phase 2</h1>
+          <p>Set time-based reading goals and deadlines</p>
         </div>
         <button 
           onClick={() => setShowCreateForm(true)}
           className="create-goal-btn"
         >
           <Plus size={20} />
-          Create Goal
+          Create Time Goal
         </button>
       </header>
 
@@ -125,8 +117,8 @@ const GoalsManager = () => {
         {goals.length === 0 ? (
           <div className="no-goals">
             <Target size={64} />
-            <h3>No goals set yet</h3>
-            <p>Create your first study goal to start tracking progress</p>
+            <h3>No time goals set yet</h3>
+            <p>Create your first reading goal with deadlines</p>
           </div>
         ) : (
           goals.map(goal => (
@@ -145,6 +137,14 @@ const GoalsManager = () => {
               </div>
 
               <p className="goal-description">{goal.description}</p>
+
+              <div className="goal-details">
+                <div className="goal-meta">
+                  <span>Target: {goal.target_value} {goal.target_type === 'daily_minutes' ? 'min/day' : 'completion'}</span>
+                  {goal.file_name && <span>File: {goal.file_name}</span>}
+                  {goal.end_date && <span>Deadline: {new Date(goal.end_date).toLocaleDateString()}</span>}
+                </div>
+              </div>
 
               <div className="goal-progress">
                 <div className="progress-header">
@@ -166,7 +166,7 @@ const GoalsManager = () => {
       {showCreateForm && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h2>Create New Goal</h2>
+            <h2>Create Time-Based Goal</h2>
             
             <div className="form-group">
               <label>Goal Title</label>
@@ -179,12 +179,46 @@ const GoalsManager = () => {
             </div>
 
             <div className="form-group">
+              <label>Goal Type</label>
+              <select
+                value={newGoal.targetType}
+                onChange={(e) => setNewGoal({...newGoal, targetType: e.target.value})}
+              >
+                <option value="daily_minutes">Daily Reading Minutes</option>
+                <option value="completion_date">Completion by Deadline</option>
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Target Value</label>
               <input
                 type="number"
                 value={newGoal.targetValue}
                 onChange={(e) => setNewGoal({...newGoal, targetValue: parseFloat(e.target.value)})}
                 min="1"
+                placeholder={newGoal.targetType === 'daily_minutes' ? 'Minutes per day' : 'Days to complete'}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>PDF File (Optional)</label>
+              <select
+                value={newGoal.fileId}
+                onChange={(e) => setNewGoal({...newGoal, fileId: e.target.value})}
+              >
+                <option value="">All files</option>
+                {files.map(file => (
+                  <option key={file.id} value={file.id}>{file.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Deadline (Optional)</label>
+              <input
+                type="date"
+                value={newGoal.endDate}
+                onChange={(e) => setNewGoal({...newGoal, endDate: e.target.value})}
               />
             </div>
 

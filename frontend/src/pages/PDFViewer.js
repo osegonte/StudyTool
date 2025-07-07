@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Home } from 'lucide-react';
-import StudyTimer from '../components/timer/StudyTimer';
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Home, Play, Pause, Square, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 
 const PDFViewer = () => {
@@ -13,11 +13,32 @@ const PDFViewer = () => {
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
   const [fileInfo, setFileInfo] = useState(null);
+  
+  // Phase 2: Session and Page-Level Time Tracking
+  const [sessionActive, setSessionActive] = useState(false);
+  const [sessionId, setSessionId] = useState(null);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [pageStartTime, setPageStartTime] = useState(null);
+  const [totalSessionTime, setTotalSessionTime] = useState(0);
+  const [currentSessionTime, setCurrentSessionTime] = useState(0);
+  const [pageTimeData, setPageTimeData] = useState({});
+  const [readingSpeed, setReadingSpeed] = useState(0);
+  const [estimatedFinishTime, setEstimatedFinishTime] = useState(0);
+  
   const canvasRef = useRef(null);
+  const sessionTimerRef = useRef(null);
+  const pageTimerRef = useRef(null);
 
   useEffect(() => {
     loadPDF();
     loadFileInfo();
+    
+    // Cleanup on unmount
+    return () => {
+      if (sessionActive) {
+        endSession();
+      }
+    };
   }, [id]);
 
   useEffect(() => {
@@ -25,6 +46,29 @@ const PDFViewer = () => {
       renderPage();
     }
   }, [currentPage, scale, rotation, pdfDoc]);
+
+  // Phase 2: Page change tracking
+  useEffect(() => {
+    if (sessionActive && pageStartTime) {
+      // Record time spent on previous page
+      recordPageTime();
+      // Start timing new page
+      startPageTiming();
+    }
+  }, [currentPage]);
+
+  // Phase 2: Session timer
+  useEffect(() => {
+    if (sessionActive) {
+      sessionTimerRef.current = setInterval(() => {
+        setCurrentSessionTime(Date.now() - sessionStartTime);
+      }, 1000);
+    } else {
+      clearInterval(sessionTimerRef.current);
+    }
+
+    return () => clearInterval(sessionTimerRef.current);
+  }, [sessionActive, sessionStartTime]);
 
   const loadPDF = async () => {
     try {
@@ -36,11 +80,13 @@ const PDFViewer = () => {
       setTotalPages(pdf.numPages);
       setLoading(false);
 
+      // Load previous progress
       try {
         const progressResponse = await axios.get(`http://localhost:3001/api/progress/${id}`);
         if (progressResponse.data.currentPage) {
           setCurrentPage(progressResponse.data.currentPage);
         }
+        setTotalSessionTime(progressResponse.data.timeSpent || 0);
       } catch (error) {
         console.error('Error loading progress:', error);
       }
@@ -83,6 +129,121 @@ const PDFViewer = () => {
     }
   };
 
+  // Phase 2: Start study session
+  const startSession = async () => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/sessions/start', {
+        fileId: id,
+        startPage: currentPage,
+        totalPages: totalPages
+      });
+      
+      setSessionId(response.data.sessionId);
+      setSessionActive(true);
+      setSessionStartTime(Date.now());
+      startPageTiming();
+      
+      toast.success('📚 Study session started! Time tracking active.');
+    } catch (error) {
+      console.error('Error starting session:', error);
+      toast.error('Failed to start session');
+    }
+  };
+
+  // Phase 2: Pause/Resume session
+  const pauseSession = () => {
+    if (sessionActive) {
+      recordPageTime();
+      setSessionActive(false);
+      toast('⏸️ Session paused');
+    } else {
+      setSessionActive(true);
+      setSessionStartTime(Date.now() - currentSessionTime);
+      startPageTiming();
+      toast('▶️ Session resumed');
+    }
+  };
+
+  // Phase 2: End study session
+  const endSession = async () => {
+    if (!sessionId || !sessionActive) return;
+
+    try {
+      // Record final page time
+      recordPageTime();
+      
+      const sessionDuration = Math.floor(currentSessionTime / 1000);
+      const pagesRead = Math.max(1, currentPage - (pageTimeData.startPage || currentPage) + 1);
+      
+      const response = await axios.post(`http://localhost:3001/api/sessions/end/${sessionId}`, {
+        endPage: currentPage,
+        sessionDuration: sessionDuration,
+        pagesRead: pagesRead,
+        pageTimeData: pageTimeData
+      });
+
+      // Update session state
+      setSessionActive(false);
+      setSessionId(null);
+      setCurrentSessionTime(0);
+      setTotalSessionTime(prev => prev + sessionDuration);
+      
+      // Calculate and display results
+      const avgTimePerPage = sessionDuration / pagesRead;
+      const readingSpeedCalc = pagesRead / (sessionDuration / 60); // pages per minute
+      setReadingSpeed(readingSpeedCalc);
+      
+      // Calculate estimated finish time
+      const remainingPages = totalPages - currentPage;
+      const estimatedMinutes = Math.ceil(remainingPages * avgTimePerPage / 60);
+      setEstimatedFinishTime(estimatedMinutes);
+      
+      toast.success(`📖 Session completed! 
+        ${pagesRead} pages read in ${Math.floor(sessionDuration / 60)}m ${sessionDuration % 60}s
+        Speed: ${readingSpeedCalc.toFixed(1)} pages/min
+        Est. finish: ${estimatedMinutes}min`);
+      
+      // Save progress
+      await saveProgress();
+      
+    } catch (error) {
+      console.error('Error ending session:', error);
+      toast.error('Failed to end session');
+    }
+  };
+
+  // Phase 2: Page-level time tracking
+  const startPageTiming = () => {
+    setPageStartTime(Date.now());
+  };
+
+  const recordPageTime = () => {
+    if (!pageStartTime) return;
+    
+    const timeOnPage = Date.now() - pageStartTime;
+    setPageTimeData(prev => ({
+      ...prev,
+      [currentPage]: (prev[currentPage] || 0) + timeOnPage,
+      startPage: prev.startPage || currentPage
+    }));
+  };
+
+  // Phase 2: Save progress with time data
+  const saveProgress = async () => {
+    try {
+      await axios.post(`http://localhost:3001/api/progress/${id}`, {
+        currentPage: currentPage,
+        totalPages: totalPages,
+        sessionTime: Math.floor(currentSessionTime / 1000),
+        totalTime: totalSessionTime,
+        readingSpeed: readingSpeed,
+        estimatedFinishTime: estimatedFinishTime
+      });
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+  };
+
   const goToPage = (page) => {
     const newPage = Math.max(1, Math.min(totalPages, page));
     setCurrentPage(newPage);
@@ -92,14 +253,25 @@ const PDFViewer = () => {
   const zoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
   const rotate = () => setRotation(prev => (prev + 90) % 360);
 
-  const handleSessionEnd = (sessionData) => {
-    console.log('Session ended:', sessionData);
+  const formatTime = (milliseconds) => {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes % 60}m ${seconds % 60}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds % 60}s`;
+    } else {
+      return `${seconds}s`;
+    }
   };
 
   if (loading) {
     return (
       <div className="pdf-viewer loading">
         <div className="loading-spinner">
+          <Clock size={48} />
           <p>Loading PDF...</p>
         </div>
       </div>
@@ -166,11 +338,55 @@ const PDFViewer = () => {
         </div>
       </header>
       
-      <StudyTimer 
-        fileId={id}
-        currentPage={currentPage}
-        onSessionEnd={handleSessionEnd}
-      />
+      {/* Phase 2: Enhanced Study Timer Dashboard */}
+      <div className="study-session-bar">
+        <div className="session-controls">
+          {!sessionActive && !sessionId && (
+            <button onClick={startSession} className="session-btn start-btn">
+              <Play size={16} />
+              Start Study Session
+            </button>
+          )}
+          
+          {sessionId && (
+            <>
+              <button onClick={pauseSession} className={`session-btn ${sessionActive ? 'pause-btn' : 'resume-btn'}`}>
+                {sessionActive ? <Pause size={16} /> : <Play size={16} />}
+                {sessionActive ? 'Pause' : 'Resume'}
+              </button>
+              
+              <button onClick={endSession} className="session-btn stop-btn">
+                <Square size={16} />
+                End Session
+              </button>
+            </>
+          )}
+        </div>
+        
+        <div className="session-info">
+          <div className="time-display">
+            <Clock size={16} />
+            <span className="session-time">{formatTime(currentSessionTime)}</span>
+          </div>
+          
+          {readingSpeed > 0 && (
+            <div className="speed-display">
+              <span className="reading-speed">{readingSpeed.toFixed(1)} pages/min</span>
+            </div>
+          )}
+          
+          {estimatedFinishTime > 0 && (
+            <div className="estimate-display">
+              <span className="finish-estimate">~{estimatedFinishTime}min to finish</span>
+            </div>
+          )}
+          
+          <div className="progress-display">
+            <span className="page-progress">{currentPage}/{totalPages} pages</span>
+            <span className="completion-percent">({Math.round((currentPage/totalPages)*100)}%)</span>
+          </div>
+        </div>
+      </div>
       
       <div className="pdf-viewer-content">
         <div className="pdf-container">

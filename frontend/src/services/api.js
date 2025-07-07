@@ -36,13 +36,6 @@ export const goalsAPI = {
   delete: (goalId) => api.delete(`/goals/${goalId}`)
 };
 
-export const topicsAPI = {
-  getAll: () => api.get('/topics'),
-  create: (data) => api.post('/topics', data),
-  update: (topicId, data) => api.put(`/topics/${topicId}`, data),
-  delete: (topicId) => api.delete(`/topics/${topicId}`)
-};
-
 export const analyticsAPI = {
   getDashboard: () => api.get('/analytics/dashboard'),
   getReadingSpeed: (period = '30') => api.get('/analytics/reading-speed', { params: { period } }),

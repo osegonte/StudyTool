@@ -1173,3 +1173,521 @@ p, h1, h2, h3, h4, h5, h6 {
     justify-content: center;
   }
 }
+
+/* Phase 2: Enhanced Time Tracking Styles */
+
+/* Study Session Bar */
+.study-session-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.session-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.session-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.start-btn:hover {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+}
+
+.pause-btn {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+}
+
+.pause-btn:hover {
+  background: linear-gradient(135deg, #e67e22, #d35400);
+}
+
+.resume-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.resume-btn:hover {
+  background: linear-gradient(135deg, #2980b9, #1f5f8b);
+}
+
+.stop-btn {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.stop-btn:hover {
+  background: linear-gradient(135deg, #c0392b, #a93226);
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  font-size: 0.9rem;
+}
+
+.time-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.session-time {
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+}
+
+.speed-display {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.reading-speed {
+  font-weight: 600;
+}
+
+.estimate-display {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+}
+
+.finish-estimate {
+  font-weight: 600;
+}
+
+.progress-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.page-progress {
+  font-weight: 600;
+}
+
+.completion-percent {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+/* Phase 2: Enhanced Dashboard Cards */
+.dashboard-card.time-tracking {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.dashboard-card.smart-goals {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.dashboard-card.analytics-advanced {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* Phase 2: Progress Tracking Enhancements */
+.progress-tracker-enhanced {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
+
+.progress-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.metric-card {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3498db;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Phase 2: Intelligence Insights */
+.intelligence-panel {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.intelligence-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.insight-list {
+  list-style: none;
+  padding: 0;
+}
+
+.insight-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.insight-item:last-child {
+  border-bottom: none;
+}
+
+.insight-icon {
+  color: #ffd700;
+}
+
+.insight-text {
+  flex: 1;
+}
+
+/* Phase 2: Time Estimation Display */
+.time-estimation {
+  background: #e8f5e8;
+  border: 2px solid #2ecc71;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.estimation-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.estimation-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.estimation-item {
+  text-align: center;
+}
+
+.estimation-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #27ae60;
+}
+
+.estimation-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+/* Phase 2: Adaptive Recommendations */
+.recommendations-panel {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.recommendation-item:last-child {
+  margin-bottom: 0;
+}
+
+.recommendation-icon {
+  color: #f39c12;
+  margin-top: 0.2rem;
+}
+
+.recommendation-content {
+  flex: 1;
+}
+
+.recommendation-title {
+  font-weight: 600;
+  color: #856404;
+  margin-bottom: 0.25rem;
+}
+
+.recommendation-text {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Phase 2: Goal Planning Interface */
+.goal-planning-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.planning-section {
+  margin-bottom: 2rem;
+}
+
+.planning-section h4 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.deadline-calculator {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.calculator-result {
+  background: #e3f2fd;
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.result-highlight {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1976d2;
+}
+
+/* Phase 2: Streak and Motivation */
+.streak-display {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.streak-number {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.streak-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.motivation-message {
+  background: #e8f5e8;
+  border-left: 4px solid #2ecc71;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0 8px 8px 0;
+}
+
+.motivation-text {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+/* Phase 2: Session History */
+.session-history {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.session-history-header {
+  background: #3498db;
+  color: white;
+  padding: 1rem;
+  font-weight: 600;
+}
+
+.session-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.session-entry:last-child {
+  border-bottom: none;
+}
+
+.session-date {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.session-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.session-duration {
+  font-weight: 600;
+  color: #3498db;
+}
+
+/* Phase 2: Responsive Enhancements */
+@media (max-width: 768px) {
+  .study-session-bar {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .session-info {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .progress-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .estimation-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .session-stats {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}
+
+/* Phase 2: Animation Enhancements */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.session-btn.active {
+  animation: pulse 2s infinite;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.metric-value {
+  animation: countUp 0.5s ease-out;
+}
+
+/* Phase 2: Focus and Productivity Indicators */
+.focus-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+}
+
+.focus-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.focus-high { background: #2ecc71; }
+.focus-medium { background: #f39c12; }
+.focus-low { background: #e74c3c; }
+
+/* Phase 2: Smart Notifications */
+.smart-notification {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.notification-icon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  opacity: 0.3;
+  font-size: 2rem;
+}
+
+.notification-content {
+  position: relative;
+  z-index: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.notification-text {
+  opacity: 0.9;
+  line-height: 1.4;
+}

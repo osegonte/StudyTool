@@ -1,32 +1,46 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const database = require('../database/init');
 
-// Start a new reading session
+// Enhanced session storage with page-level data
+let sessions = {};
+let sessionAnalytics = {};
+
+// Start a new study session
 router.post('/start', async (req, res) => {
   try {
-    const { fileId, startPage } = req.body;
+    const { fileId, startPage, totalPages } = req.body;
     const sessionId = uuidv4();
     
     const session = {
       id: sessionId,
-      file_id: fileId,
-      start_time: new Date().toISOString(),
-      start_page: startPage || 1,
-      session_type: 'reading'
+      fileId: fileId,
+      startTime: new Date().toISOString(),
+      startPage: startPage || 1,
+      totalPages: totalPages || 100,
+      sessionType: 'reading',
+      isActive: true,
+      pageTimeData: {},
+      milestones: []
     };
 
-    await database.run(
-      `INSERT INTO reading_sessions (id, file_id, start_time, start_page, session_type)
-       VALUES (?, ?, ?, ?, ?)`,
-      [session.id, session.file_id, session.start_time, session.start_page, session.session_type]
-    );
+    sessions[sessionId] = session;
+    
+    // Initialize session analytics
+    if (!sessionAnalytics[fileId]) {
+      sessionAnalytics[fileId] = {
+        totalSessions: 0,
+        totalTime: 0,
+        totalPages: 0,
+        averageSpeed: 0,
+        sessionHistory: []
+      };
+    }
 
     res.json({ 
       success: true, 
-      sessionId,
-      message: 'Reading session started' 
+      sessionId: sessionId,
+      message: 'Study session started with page-level tracking' 
     });
   } catch (error) {
     console.error('Error starting session:', error);
@@ -34,48 +48,79 @@ router.post('/start', async (req, res) => {
   }
 });
 
-// End reading session
+// End study session with comprehensive data
 router.post('/end/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { endPage, notes } = req.body;
-    const endTime = new Date().toISOString();
-
-    // Get session start time
-    const session = await database.query(
-      'SELECT * FROM reading_sessions WHERE id = ?',
-      [sessionId]
-    );
-
-    if (session.length === 0) {
+    const { endPage, sessionDuration, pagesRead, pageTimeData } = req.body;
+    
+    if (!sessions[sessionId]) {
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    const startTime = new Date(session[0].start_time);
-    const duration = Math.floor((new Date(endTime) - startTime) / 1000);
-    const pagesRead = Math.max(0, (endPage || session[0].start_page) - session[0].start_page + 1);
-    const readingSpeed = duration > 0 ? (pagesRead / (duration / 60)) : 0;
-
-    await database.run(
-      `UPDATE reading_sessions 
-       SET end_time = ?, duration = ?, end_page = ?, pages_read = ?, 
-           reading_speed = ?, notes = ?
-       WHERE id = ?`,
-      [endTime, duration, endPage, pagesRead, readingSpeed, notes, sessionId]
-    );
-
-    // Update reading progress
-    await updateReadingProgress(session[0].file_id, endPage, duration, readingSpeed);
-
-    // Update daily stats
-    await updateDailyStats(new Date().toISOString().split('T')[0], duration, pagesRead);
-
+    const session = sessions[sessionId];
+    const endTime = new Date().toISOString();
+    
+    // Calculate comprehensive session metrics
+    const actualDuration = sessionDuration || Math.floor((new Date(endTime) - new Date(session.startTime)) / 1000);
+    const actualPagesRead = pagesRead || Math.max(1, (endPage || session.startPage) - session.startPage + 1);
+    const readingSpeed = actualPagesRead / (actualDuration / 60); // pages per minute
+    const avgTimePerPage = actualDuration / actualPagesRead; // seconds per page
+    
+    // Update session
+    session.endTime = endTime;
+    session.duration = actualDuration;
+    session.endPage = endPage;
+    session.pagesRead = actualPagesRead;
+    session.readingSpeed = readingSpeed;
+    session.avgTimePerPage = avgTimePerPage;
+    session.pageTimeData = pageTimeData || {};
+    session.isActive = false;
+    
+    // Update analytics for this file
+    const analytics = sessionAnalytics[session.fileId];
+    analytics.totalSessions += 1;
+    analytics.totalTime += actualDuration;
+    analytics.totalPages += actualPagesRead;
+    analytics.averageSpeed = analytics.totalPages / (analytics.totalTime / 60);
+    
+    // Add to session history
+    analytics.sessionHistory.push({
+      sessionId: sessionId,
+      date: endTime.split('T')[0],
+      duration: actualDuration,
+      pagesRead: actualPagesRead,
+      readingSpeed: readingSpeed,
+      startPage: session.startPage,
+      endPage: endPage
+    });
+    
+    // Calculate estimated finish time for remaining pages
+    const remainingPages = session.totalPages - (endPage || session.startPage);
+    const estimatedFinishTime = Math.ceil(remainingPages * avgTimePerPage / 60); // minutes
+    
+    // Determine reading difficulty based on speed
+    let difficulty = 'Normal';
+    if (readingSpeed < 0.5) difficulty = 'Challenging';
+    else if (readingSpeed > 2) difficulty = 'Easy';
+    
     res.json({ 
       success: true, 
-      duration,
-      pagesRead,
-      readingSpeed,
-      message: 'Session ended successfully' 
+      sessionData: {
+        duration: actualDuration,
+        pagesRead: actualPagesRead,
+        readingSpeed: readingSpeed,
+        avgTimePerPage: avgTimePerPage,
+        estimatedFinishTime: estimatedFinishTime,
+        difficulty: difficulty,
+        progress: Math.round(((endPage || session.startPage) / session.totalPages) * 100)
+      },
+      analytics: {
+        totalSessions: analytics.totalSessions,
+        averageSpeed: analytics.averageSpeed,
+        totalStudyTime: analytics.totalTime
+      },
+      message: 'Session completed with detailed analytics' 
     });
   } catch (error) {
     console.error('Error ending session:', error);
@@ -83,118 +128,108 @@ router.post('/end/:sessionId', async (req, res) => {
   }
 });
 
+// Get session analytics for a file
+router.get('/analytics/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    if (!sessionAnalytics[fileId]) {
+      return res.json({
+        totalSessions: 0,
+        totalTime: 0,
+        totalPages: 0,
+        averageSpeed: 0,
+        sessionHistory: [],
+        predictions: {
+          estimatedFinishTime: 0,
+          recommendedDailyTime: 0
+        }
+      });
+    }
+    
+    const analytics = sessionAnalytics[fileId];
+    
+    // Calculate predictions based on collected data
+    const predictions = {
+      estimatedFinishTime: 0,
+      recommendedDailyTime: 30, // Default 30 minutes
+      consistencyScore: 0
+    };
+    
+    if (analytics.sessionHistory.length > 0) {
+      // Calculate consistency (how regular are study sessions)
+      const dates = [...new Set(analytics.sessionHistory.map(s => s.date))];
+      predictions.consistencyScore = Math.min(100, (dates.length / 7) * 100); // Based on weekly consistency
+      
+      // Recommend daily time based on average session length
+      const avgSessionLength = analytics.totalTime / analytics.totalSessions;
+      predictions.recommendedDailyTime = Math.max(15, Math.min(90, avgSessionLength));
+    }
+    
+    res.json({
+      ...analytics,
+      predictions: predictions
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch session analytics' });
+  }
+});
+
 // Get session history for a file
 router.get('/file/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
-    const sessions = await database.query(
-      `SELECT * FROM reading_sessions 
-       WHERE file_id = ? 
-       ORDER BY start_time DESC`,
-      [fileId]
-    );
-
-    res.json(sessions);
+    const fileSessions = Object.values(sessions).filter(s => s.fileId === fileId);
+    res.json(fileSessions);
   } catch (error) {
     console.error('Error fetching sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
 
-// Get all sessions for analytics
+// Get all sessions for dashboard
 router.get('/all', async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    let query = 'SELECT * FROM reading_sessions WHERE 1=1';
-    let params = [];
-
-    if (startDate) {
-      query += ' AND DATE(start_time) >= ?';
-      params.push(startDate);
-    }
-
-    if (endDate) {
-      query += ' AND DATE(start_time) <= ?';
-      params.push(endDate);
-    }
-
-    query += ' ORDER BY start_time DESC';
-
-    const sessions = await database.query(query, params);
-    res.json(sessions);
+    const allSessions = Object.values(sessions);
+    const summary = {
+      totalSessions: allSessions.length,
+      activeSessions: allSessions.filter(s => s.isActive).length,
+      totalStudyTime: allSessions.reduce((sum, s) => sum + (s.duration || 0), 0),
+      totalPagesRead: allSessions.reduce((sum, s) => sum + (s.pagesRead || 0), 0)
+    };
+    
+    res.json({
+      sessions: allSessions,
+      summary: summary
+    });
   } catch (error) {
     console.error('Error fetching all sessions:', error);
     res.status(500).json({ error: 'Failed to fetch sessions' });
   }
 });
 
-// Helper function to update reading progress
-async function updateReadingProgress(fileId, currentPage, sessionDuration, readingSpeed) {
+// Get reading speed trends over time
+router.get('/speed-trends/:fileId', async (req, res) => {
   try {
-    const existing = await database.query(
-      'SELECT * FROM reading_progress WHERE file_id = ?',
-      [fileId]
-    );
-
-    if (existing.length === 0) {
-      await database.run(
-        `INSERT INTO reading_progress 
-         (id, file_id, current_page, total_time_spent, sessions_count, 
-          average_reading_speed, last_session_date, updated_at)
-         VALUES (?, ?, ?, ?, 1, ?, ?, ?)`,
-        [uuidv4(), fileId, currentPage, sessionDuration, readingSpeed, 
-         new Date().toISOString(), new Date().toISOString()]
-      );
-    } else {
-      const progress = existing[0];
-      const newTotalTime = progress.total_time_spent + sessionDuration;
-      const newSessionCount = progress.sessions_count + 1;
-      const newAvgSpeed = ((progress.average_reading_speed * progress.sessions_count) + readingSpeed) / newSessionCount;
-
-      await database.run(
-        `UPDATE reading_progress 
-         SET current_page = ?, total_time_spent = ?, sessions_count = ?,
-             average_reading_speed = ?, last_session_date = ?, updated_at = ?
-         WHERE file_id = ?`,
-        [currentPage, newTotalTime, newSessionCount, newAvgSpeed,
-         new Date().toISOString(), new Date().toISOString(), fileId]
-      );
+    const { fileId } = req.params;
+    
+    if (!sessionAnalytics[fileId]) {
+      return res.json([]);
     }
+    
+    const trends = sessionAnalytics[fileId].sessionHistory.map(session => ({
+      date: session.date,
+      readingSpeed: session.readingSpeed,
+      duration: session.duration,
+      pagesRead: session.pagesRead
+    }));
+    
+    res.json(trends);
   } catch (error) {
-    console.error('Error updating reading progress:', error);
+    console.error('Error fetching speed trends:', error);
+    res.status(500).json({ error: 'Failed to fetch speed trends' });
   }
-}
-
-// Helper function to update daily stats
-async function updateDailyStats(date, duration, pagesRead) {
-  try {
-    const existing = await database.query(
-      'SELECT * FROM daily_stats WHERE date = ?',
-      [date]
-    );
-
-    if (existing.length === 0) {
-      await database.run(
-        `INSERT INTO daily_stats 
-         (id, date, total_reading_time, pages_read, sessions_count, files_worked_on)
-         VALUES (?, ?, ?, ?, 1, 1)`,
-        [uuidv4(), date, duration, pagesRead]
-      );
-    } else {
-      const stats = existing[0];
-      await database.run(
-        `UPDATE daily_stats 
-         SET total_reading_time = ?, pages_read = ?, sessions_count = ?
-         WHERE date = ?`,
-        [stats.total_reading_time + duration, 
-         stats.pages_read + pagesRead,
-         stats.sessions_count + 1,
-         date]
-      );
-    }
-  } catch (error) {
-    console.error('Error updating daily stats:', error);
-  }
-}
+});
 
 module.exports = router;

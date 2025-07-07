@@ -1,7 +1,7 @@
 {
   "name": "study-planner-frontend",
   "version": "2.0.0",
-  "description": "Local Study Planner - Frontend Phase 2",
+  "description": "Local Study Planner Phase 2: Time Tracking & Goal Setting Frontend",
   "private": true,
   "dependencies": {
     "@csstools/normalize.css": "^12.1.1",

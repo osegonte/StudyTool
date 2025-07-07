@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer
+  BarChart, Bar, ResponsiveContainer
 } from 'recharts';
-import { Calendar, Clock, BookOpen, Target, TrendingUp } from 'lucide-react';
+import { Clock, BookOpen, TrendingUp } from 'lucide-react';
 import { analyticsAPI } from '../../services/api';
-
-const COLORS = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
 
 const AnalyticsDashboard = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [readingSpeedData, setReadingSpeedData] = useState([]);
   const [dailyActivityData, setDailyActivityData] = useState([]);
-  const [topicDistribution, setTopicDistribution] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,17 +20,15 @@ const AnalyticsDashboard = () => {
     try {
       setLoading(true);
       
-      const [dashboard, speed, activity, topics] = await Promise.all([
+      const [dashboard, speed, activity] = await Promise.all([
         analyticsAPI.getDashboard(),
         analyticsAPI.getReadingSpeed(),
-        analyticsAPI.getDailyActivity(),
-        analyticsAPI.getTopicsDistribution()
+        analyticsAPI.getDailyActivity()
       ]);
 
       setDashboardStats(dashboard.data);
       setReadingSpeedData(speed.data);
       setDailyActivityData(activity.data);
-      setTopicDistribution(topics.data);
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
@@ -63,8 +58,8 @@ const AnalyticsDashboard = () => {
   return (
     <div className="analytics-dashboard">
       <header className="analytics-header">
-        <h1>📊 Study Analytics</h1>
-        <p>Insights into your learning patterns and progress</p>
+        <h1>📊 Phase 2 Analytics</h1>
+        <p>Time tracking and reading speed insights</p>
       </header>
 
       <div className="analytics-summary">
@@ -91,19 +86,11 @@ const AnalyticsDashboard = () => {
             <p>Avg Pages/Min</p>
           </div>
         </div>
-        
-        <div className="summary-card">
-          <Target size={32} />
-          <div>
-            <h3>{dashboardStats?.overall?.activeGoals || 0}</h3>
-            <p>Active Goals</p>
-          </div>
-        </div>
       </div>
 
       <div className="analytics-charts">
         <div className="chart-container">
-          <h3>Reading Speed Trend</h3>
+          <h3>Reading Speed Trend (Phase 2 Focus)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={readingSpeedData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -117,7 +104,7 @@ const AnalyticsDashboard = () => {
         </div>
 
         <div className="chart-container">
-          <h3>Daily Study Activity</h3>
+          <h3>Daily Reading Time (Goal Tracking)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={dailyActivityData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -126,30 +113,7 @@ const AnalyticsDashboard = () => {
               <Tooltip />
               <Legend />
               <Bar dataKey="readingTime" fill="#3498db" />
-              <Bar dataKey="pagesRead" fill="#2ecc71" />
             </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="chart-container">
-          <h3>Time by Topic</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={topicDistribution}
-                cx="50%"
-                cy="50%"
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="total_time"
-                label={({ name, value }) => `${name}: ${formatTime(value)}`}
-              >
-                {topicDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
           </ResponsiveContainer>
         </div>
       </div>

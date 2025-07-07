@@ -12,3 +12,12 @@
 📊 Database: /Users/osegonte/StudyTool/data/study-planner.db
 📊 Database connected successfully
 📋 Database tables created successfully
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `node src/index.js`[39m
+[32m[nodemon] restarting child process[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 Study Planner API Phase 2 running on port 3001
+📁 PDF storage: /Users/osegonte/StudyTool/data/pdfs
+📊 Database: /Users/osegonte/StudyTool/data/study-planner.db
+📊 Database connected successfully
+📋 Database tables created successfully

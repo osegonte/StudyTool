@@ -1,7 +1,7 @@
 {
   "name": "study-planner-backend",
   "version": "2.0.0",
-  "description": "Local Study Planner - Backend Phase 2",
+  "description": "Local Study Planner Phase 2: Time Tracking & Goal Setting Backend",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
