@@ -1,0 +1,196 @@
+/* Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.App {
+  min-height: 100vh;
+}
+
+/* Dashboard Styles */
+.dashboard {
+  padding: 2rem;
+}
+
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dashboard-card {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.dashboard-card svg {
+  color: #3498db;
+  margin-bottom: 1rem;
+}
+
+.dashboard-card h3 {
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+/* File Manager Styles */
+.file-manager {
+  padding: 2rem;
+}
+
+.file-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.upload-btn:hover {
+  background: #2980b9;
+}
+
+.file-manager-content {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 2rem;
+}
+
+.topics-sidebar {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  height: fit-content;
+}
+
+.topic-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.topic-item:hover {
+  background: #f8f9fa;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.file-item {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.file-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.file-item svg {
+  color: #e74c3c;
+  margin-bottom: 1rem;
+}
+
+/* PDF Viewer Styles */
+.pdf-viewer {
+  padding: 2rem;
+}
+
+.pdf-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.pdf-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pdf-controls button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pdf-controls button:hover {
+  background: #2980b9;
+}
+
+.pdf-display {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-placeholder {
+  color: #7f8c8d;
+  font-size: 1.2rem;
+}
