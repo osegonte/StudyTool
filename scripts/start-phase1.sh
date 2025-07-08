@@ -32,22 +32,6 @@ if [ ! -f "README.md" ] || [ ! -d "frontend" ] || [ ! -d "backend" ]; then
     print_error "Please run this script from the local-study-planner root directory"
 fi
 
-# Check if dependencies are installed
-if [ ! -d "backend/node_modules" ] || [ ! -d "frontend/node_modules" ]; then
-    print_warning "Dependencies not found. Installing..."
-    ./scripts/install-deps.sh
-fi
-
-# Check if backend file exists
-if [ ! -f "backend/src/index.js" ]; then
-    print_error "Backend index.js not found. Please create backend/src/index.js first."
-fi
-
-# Check if frontend App.js exists
-if [ ! -f "frontend/src/App.js" ]; then
-    print_error "Frontend App.js not found. Please create frontend/src/App.js first."
-fi
-
 # Kill existing processes
 print_info "Stopping any existing servers..."
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
