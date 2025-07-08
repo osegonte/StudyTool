@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import FileManager from './pages/FileManager';
-import PDFViewer from './pages/PDFViewer';
+import PDFViewerCompact from './pages/PDFViewerCompact';
 import TopicManager from './pages/TopicManager';
 import './styles/App.css';
 
@@ -17,7 +17,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/files" element={<FileManager />} />
             <Route path="/topics" element={<TopicManager />} />
-            <Route path="/viewer/:fileId" element={<PDFViewer />} />
+            <Route path="/viewer/:fileId" element={<PDFViewerCompact />} />
           </Routes>
         </main>
       </div>

@@ -1426,3 +1426,1339 @@ body {
     align-items: flex-start;
   }
 }
+
+/* Stage 3: Focus & Motivation Layer Styles */
+
+/* Focus Mode Styles */
+.focus-mode-trigger {
+  position: relative;
+}
+
+.focus-toggle-btn {
+  margin-bottom: 1rem;
+}
+
+.focus-mode-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.focus-mode-container.focus-mode-minimal {
+  background: #fafbfc;
+}
+
+.focus-mode-container.focus-mode-celebration {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  animation: celebrate 0.5s ease-in-out;
+}
+
+.focus-mode-container.focus-mode-dark {
+  background: #1a1a1a;
+  color: #e2e8f0;
+}
+
+.focus-mode-header {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10000;
+}
+
+.focus-mode-controls {
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.focus-mode-controls:hover {
+  opacity: 1;
+}
+
+.focus-control-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: #64748b;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.focus-control-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #1e293b;
+  transform: scale(1.1);
+}
+
+.focus-control-btn.exit-focus:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.focus-mode-content {
+  height: 100vh;
+  overflow: auto;
+  padding: 2rem;
+  padding-top: 4rem;
+}
+
+.focus-mode-content.dark {
+  background: #1a1a1a;
+  color: #e2e8f0;
+}
+
+.focus-mode-content.light {
+  background: #ffffff;
+  color: #1e293b;
+}
+
+/* Hide navigation in focus mode */
+body.focus-mode-active .navigation {
+  display: none;
+}
+
+body.focus-mode-active .main-content {
+  margin-left: 0;
+}
+
+@keyframes celebrate {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Pomodoro Timer Styles */
+.pomodoro-timer {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pomodoro-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-info svg {
+  color: #3b82f6;
+}
+
+.session-info h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.session-info p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.timer-display {
+  display: flex;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.timer-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-progress {
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.timer-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.timer-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.timer-btn.primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.timer-btn.secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.timer-btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+.timer-btn.danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.timer-btn.danger:hover {
+  background: #fee2e2;
+}
+
+.timer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.session-selector {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.session-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.session-btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.session-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.session-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* XP and Streaks Display Styles */
+.xp-streaks-display {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.xp-compact {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.compact-stats {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.compact-stats .stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.xp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.xp-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.level-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.level-section {
+  margin-bottom: 1.5rem;
+}
+
+.level-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.level-info p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.level-progress {
+  margin-top: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.daily {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.streak-section {
+  margin-bottom: 1.5rem;
+}
+
+.streak-display {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #fcd34d;
+}
+
+.streak-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.streak-icon {
+  color: #f59e0b;
+}
+
+.streak-info {
+  flex: 1;
+}
+
+.streak-number {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #92400e;
+}
+
+.streak-label {
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.streak-emoji {
+  font-size: 1.5rem;
+}
+
+.best-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+.daily-goal-section {
+  margin-bottom: 1.5rem;
+}
+
+.goal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.goal-met {
+  margin-left: auto;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.goal-progress {
+  margin-bottom: 0.75rem;
+}
+
+.goal-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.today-breakdown {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.breakdown-item {
+  flex: 1;
+}
+
+.xp-tips {
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #f1f5f9;
+}
+
+.xp-tips h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.xp-tips ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.xp-tips li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.xp-tips svg {
+  color: #10b981;
+}
+
+.xp-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+/* Enhanced Timer Integration */
+.timer-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.enhanced-page-timer {
+  order: 1;
+}
+
+.pomodoro-timer {
+  order: 2;
+}
+
+.xp-streaks-display {
+  grid-column: 1 / -1;
+  order: 3;
+}
+
+/* Responsive Design for Stage 3 */
+@media (max-width: 1024px) {
+  .timer-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .enhanced-page-timer {
+    order: 1;
+  }
+  
+  .pomodoro-timer {
+    order: 2;
+  }
+  
+  .xp-streaks-display {
+    grid-column: 1;
+    order: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .focus-mode-content {
+    padding: 1rem;
+    padding-top: 3rem;
+  }
+  
+  .pomodoro-timer {
+    padding: 1rem;
+  }
+  
+  .timer-display .time {
+    font-size: 1.25rem;
+  }
+  
+  .timer-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .session-selector {
+    flex-direction: column;
+  }
+  
+  .streak-main {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .today-breakdown {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* Notification Styles */
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification.success {
+  border-left: 4px solid #10b981;
+}
+
+.notification.info {
+  border-left: 4px solid #3b82f6;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Focus Mode specific PDF viewer adjustments */
+.focus-mode-active .single-page-viewer {
+  background: transparent;
+  border: none;
+}
+
+.focus-mode-active .pdf-controls {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.focus-mode-dark .pdf-controls {
+  background: rgba(0, 0, 0, 0.8);
+  color: #e2e8f0;
+}
+
+.focus-mode-dark .control-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.focus-mode-dark .control-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Apple HIG-Inspired Stage 3 Redesign */
+
+/* Session Toolbar - Sticky Bottom */
+.session-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 260px; /* Account for navigation */
+  right: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 16px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.session-toolbar.focus-mode {
+  left: 0;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+}
+
+.toolbar-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.time-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.time-item.pomodoro {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.pomodoro-indicator {
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.progress-section {
+  flex: 1;
+  max-width: 200px;
+}
+
+.daily-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  min-width: 35px;
+}
+
+.controls-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.streak-pill,
+.xp-pill {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.streak-pill {
+  color: #f59e0b;
+}
+
+.xp-pill {
+  color: #3b82f6;
+}
+
+.streak-pill:hover,
+.xp-pill:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+}
+
+.focus-toggle,
+.details-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.focus-toggle:hover,
+.details-toggle:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #1e293b;
+  transform: scale(1.1);
+}
+
+.toolbar-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.detail-item {
+  text-align: center;
+}
+
+.detail-item .label {
+  display: block;
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.detail-item .value {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Minimal Pomodoro Control */
+.minimal-pomodoro {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.minimal-pomodoro:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.pomodoro-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.session-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.session-type {
+  font-size: 10px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.time-display {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 35px;
+  text-align: center;
+}
+
+.progress-ring {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.progress-ring svg {
+  transform: rotate(-90deg);
+}
+
+.pomodoro-controls {
+  display: flex;
+  gap: 4px;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.control-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: #1e293b;
+  transform: scale(1.1);
+}
+
+.control-btn.start {
+  color: #10b981;
+}
+
+.control-btn.pause {
+  color: #f59e0b;
+}
+
+.control-btn.stop {
+  color: #ef4444;
+}
+
+/* Completion Toast */
+.completion-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Enhanced PDF Viewer Layout */
+.pdf-viewer {
+  padding-bottom: 60px; /* Account for toolbar */
+}
+
+.pdf-viewer.focus-mode {
+  padding-bottom: 50px;
+}
+
+.single-page-section {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  background: #f8fafc;
+}
+
+.single-page-viewer {
+  max-width: 800px;
+  width: 100%;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.pdf-controls {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 8px 16px;
+}
+
+.pdf-canvas-container {
+  background: white;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Focus Mode Adjustments */
+.focus-mode-active .session-toolbar {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+}
+
+.focus-mode-active .session-toolbar .time-item,
+.focus-mode-active .session-toolbar .streak-pill,
+.focus-mode-active .session-toolbar .xp-pill,
+.focus-mode-active .session-toolbar .focus-toggle,
+.focus-mode-active .session-toolbar .details-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.focus-mode-active .session-toolbar .time-item.pomodoro {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .session-toolbar {
+    left: 0;
+    padding: 6px 12px;
+  }
+  
+  .toolbar-main {
+    gap: 8px;
+  }
+  
+  .time-section {
+    gap: 6px;
+  }
+  
+  .progress-section {
+    max-width: 120px;
+  }
+  
+  .controls-section {
+    gap: 4px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .single-page-section {
+    padding: 10px;
+  }
+  
+  .pdf-viewer {
+    padding-bottom: 50px;
+  }
+}
+
+/* Hide old Stage 3 components when using compact layout */
+.enhanced-page-timer,
+.pomodoro-timer,
+.xp-streaks-display {
+  display: none;
+}
+
+/* Show compact components */
+.timer-section {
+  display: none;
+}
+
+/* Enhanced Compact Session Toolbar Styles */
+.session-toolbar {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 260px; /* Account for navigation */
+  right: 0 !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 12px 20px !important;
+  z-index: 1000 !important;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+.session-toolbar.focus-mode {
+  left: 0 !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: white !important;
+}
+
+.toolbar-main {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+}
+
+.time-section {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-width: 120px !important;
+}
+
+.time-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-radius: 16px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #3b82f6 !important;
+  border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.time-item.pomodoro {
+  background: rgba(16, 185, 129, 0.15) !important;
+  color: #10b981 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+.pomodoro-indicator {
+  width: 8px !important;
+  height: 8px !important;
+  background: #10b981 !important;
+  border-radius: 50% !important;
+  animation: pulse 2s infinite !important;
+}
+
+.progress-section {
+  flex: 1 !important;
+  max-width: 250px !important;
+  margin: 0 20px !important;
+}
+
+.daily-progress {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.progress-bar {
+  flex: 1 !important;
+  height: 6px !important;
+  background: rgba(0, 0, 0, 0.1) !important;
+  border-radius: 3px !important;
+  overflow: hidden !important;
+}
+
+.progress-fill {
+  height: 100% !important;
+  background: linear-gradient(90deg, #10b981, #059669) !important;
+  border-radius: 3px !important;
+  transition: width 0.5s ease !important;
+}
+
+.progress-text {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  min-width: 50px !important;
+  text-align: right !important;
+}
+
+.controls-section {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 200px !important;
+  justify-content: flex-end !important;
+}
+
+.streak-pill,
+.xp-pill,
+.pomodoro-start,
+.pomodoro-pause {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 6px 12px !important;
+  background: rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.streak-pill {
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.xp-pill {
+  color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+.pomodoro-start {
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.pomodoro-pause {
+  color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.focus-toggle,
+.details-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  background: rgba(0, 0, 0, 0.08) !important;
+  border: none !important;
+  border-radius: 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  color: #64748b !important;
+}
+
+.focus-toggle:hover,
+.details-toggle:hover,
+.streak-pill:hover,
+.xp-pill:hover,
+.pomodoro-start:hover,
+.pomodoro-pause:hover {
+  transform: scale(1.05) !important;
+  background: rgba(0, 0, 0, 0.15) !important;
+}
+
+.toolbar-details {
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.detail-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)) !important;
+  gap: 16px !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+}
+
+.detail-item {
+  text-align: center !important;
+}
+
+.detail-item .label {
+  display: block !important;
+  font-size: 10px !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 4px !important;
+}
+
+.detail-item .value {
+  display: block !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+}
+
+/* PDF Viewer adjustments for toolbar */
+.pdf-viewer {
+  padding-bottom: 80px !important; /* Space for toolbar */
+}
+
+.pdf-viewer.focus-mode {
+  padding-bottom: 60px !important;
+}
+
+.pdf-viewer.focus-mode .viewer-header {
+  display: none !important;
+}
+
+/* Focus mode adjustments */
+.focus-mode-active .navigation {
+  display: none !important;
+}
+
+.focus-mode-active .session-toolbar {
+  left: 0 !important;
+  background: rgba(0, 0, 0, 0.95) !important;
+  color: white !important;
+}
+
+.focus-mode-active .session-toolbar .time-item,
+.focus-mode-active .session-toolbar .streak-pill,
+.focus-mode-active .session-toolbar .xp-pill,
+.focus-mode-active .session-toolbar .pomodoro-start,
+.focus-mode-active .session-toolbar .pomodoro-pause,
+.focus-mode-active .session-toolbar .focus-toggle,
+.focus-mode-active .session-toolbar .details-toggle {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.focus-mode-active .session-toolbar .progress-text,
+.focus-mode-active .session-toolbar .detail-item .label,
+.focus-mode-active .session-toolbar .detail-item .value {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .session-toolbar {
+    left: 0 !important;
+    padding: 8px 12px !important;
+  }
+  
+  .toolbar-main {
+    gap: 8px !important;
+  }
+  
+  .time-section {
+    min-width: 80px !important;
+    gap: 6px !important;
+  }
+  
+  .progress-section {
+    max-width: 150px !important;
+    margin: 0 10px !important;
+  }
+  
+  .controls-section {
+    min-width: 120px !important;
+    gap: 6px !important;
+  }
+  
+  .detail-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+  }
+}
+
+/* Ensure toolbar is always visible */
+.session-toolbar {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: all !important;
+}

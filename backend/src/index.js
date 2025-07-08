@@ -32,7 +32,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-// Test database connection with better error handling
+// Test database connection
 const testConnection = async () => {
   try {
     const client = await pool.connect();
@@ -41,24 +41,6 @@ const testConnection = async () => {
     return true;
   } catch (err) {
     console.error('❌ Error connecting to PostgreSQL database:', err.message);
-    
-    // Try to create database if it doesn't exist
-    if (err.code === '3D000') { // database does not exist
-      console.log('📝 Database does not exist, attempting to create...');
-      try {
-        const { exec } = require('child_process');
-        exec(`createdb study_planner`, (error) => {
-          if (error) {
-            console.error('Failed to create database:', error.message);
-          } else {
-            console.log('✅ Database created successfully');
-          }
-        });
-      } catch (createError) {
-        console.error('Failed to create database:', createError.message);
-      }
-    }
-    
     return false;
   }
 };
@@ -108,7 +90,14 @@ const initializeDatabase = async () => {
         time_spent INTEGER DEFAULT 0,
         last_read TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         bookmarks JSONB DEFAULT '[]'::jsonb,
-        notes TEXT
+        notes TEXT,
+        current_page_start_time TIMESTAMP,
+        total_reading_time_seconds INTEGER DEFAULT 0,
+        pages_read_count INTEGER DEFAULT 0,
+        current_session_id UUID,
+        last_session_start TIMESTAMP,
+        total_study_time_seconds INTEGER DEFAULT 0,
+        session_count INTEGER DEFAULT 0
       )
     `);
 
@@ -161,10 +150,11 @@ app.get('/api/health', async (req, res) => {
     await pool.query('SELECT 1');
     res.json({ 
       status: 'healthy', 
-      message: 'Local Study Planner Backend is running with PostgreSQL',
+      message: 'Local Study Planner Backend is running with PostgreSQL + Stage 3',
       timestamp: new Date().toISOString(),
       database: 'PostgreSQL connected',
-      user: currentUser
+      user: currentUser,
+      stage: '3 - Focus & Motivation'
     });
   } catch (error) {
     res.status(500).json({ 
@@ -394,6 +384,22 @@ app.get('/api/dashboard/stats', async (req, res) => {
   }
 });
 
+// Include all previous routes (page tracking, study sessions)
+const pageTrackingRoutes = require('./routes/page-tracking');
+const studySessionRoutes = require('./routes/study-sessions');
+app.use('/api/page-tracking', pageTrackingRoutes);
+app.use('/api/study-sessions', studySessionRoutes);
+
+// Stage 3 routes
+const pomodoroRoutes = require('./routes/pomodoro');
+const userProgressRoutes = require('./routes/user-progress');
+app.use('/api/pomodoro', pomodoroRoutes);
+app.use('/api/user-progress', userProgressRoutes);
+
+// Start session cleanup service
+const { startCleanupService } = require('./services/session-cleanup');
+startCleanupService();
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
@@ -406,10 +412,8 @@ app.use((error, req, res, next) => {
 });
 
 // Initialize and start server
-// Start session cleanup service
-const { startCleanupService } = require("./services/session-cleanup");
-startCleanupService();const startServer = async () => {
-  console.log(`🚀 Starting Local Study Planner Backend...`);
+const startServer = async () => {
+  console.log(`🚀 Starting Local Study Planner Backend (Stage 3)...`);
   console.log(`👤 Database user: ${currentUser}`);
   
   // Test connection first
@@ -427,9 +431,10 @@ startCleanupService();const startServer = async () => {
   
   // Start server
   app.listen(PORT, () => {
-    console.log(`🚀 Local Study Planner Backend running on port ${PORT}`);
+    console.log(`🚀 Local Study Planner Backend (Stage 3) running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🐘 Database: PostgreSQL (user: ${currentUser})`);
+    console.log(`🎯 Stage 3 Features: Focus Mode, Pomodoro, XP & Streaks`);
   });
 };
 
@@ -446,7 +451,141 @@ startServer().catch(error => {
   process.exit(1);
 });
 
-// Page tracking routes for Phase 2
-const pageTrackingRoutes = require('./routes/page-tracking');
-const studySessionRoutes = require("./routes/study-sessions");
-app.use("/api/study-sessions", studySessionRoutes);app.use('/api/page-tracking', pageTrackingRoutes);
+// Focus session routes
+const focusSessionRoutes = require('./routes/focus-sessions');
+app.use('/api/focus-sessions', focusSessionRoutes);
+
+// Comprehensive data persistence routes
+const exercisesRoutes = require('./routes/exercises');
+const studyGoalsRoutes = require('./routes/study-goals');
+const analyticsRoutes = require('./routes/analytics');
+
+app.use('/api/exercises', exercisesRoutes);
+app.use('/api/study-goals', studyGoalsRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+// Additional endpoints for comprehensive tracking
+app.post('/api/study-contexts', async (req, res) => {
+  try {
+    const {
+      session_id,
+      location,
+      device_used,
+      lighting_condition,
+      noise_level,
+      temperature_comfort,
+      posture,
+      notes
+    } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO study_contexts 
+       (session_id, location, device_used, lighting_condition, noise_level, 
+        temperature_comfort, posture, notes) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       RETURNING *`,
+      [session_id, location, device_used, lighting_condition, noise_level,
+       temperature_comfort, posture, notes]
+    );
+    
+    res.json({ success: true, context: result.rows[0] });
+  } catch (error) {
+    console.error('Error saving study context:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/page-interactions', async (req, res) => {
+  try {
+    const {
+      session_id,
+      page_number,
+      interaction_type,
+      interaction_start,
+      notes,
+      content_excerpt
+    } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO page_interactions 
+       (session_id, page_number, interaction_type, interaction_start, notes, content_excerpt) 
+       VALUES ($1, $2, $3, $4, $5, $6) 
+       RETURNING *`,
+      [session_id, page_number, interaction_type, interaction_start, notes, content_excerpt]
+    );
+    
+    res.json({ success: true, interaction: result.rows[0] });
+  } catch (error) {
+    console.error('Error saving page interaction:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/study-reflections', async (req, res) => {
+  try {
+    const {
+      session_id,
+      what_went_well,
+      what_was_challenging,
+      key_insights,
+      concepts_mastered,
+      concepts_need_work,
+      study_strategy_effectiveness,
+      motivation_level,
+      action_items,
+      next_session_plan
+    } = req.body;
+    
+    const result = await pool.query(
+      `INSERT INTO study_reflections 
+       (session_id, what_went_well, what_was_challenging, key_insights, 
+        concepts_mastered, concepts_need_work, study_strategy_effectiveness, 
+        motivation_level, action_items, next_session_plan) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+       RETURNING *`,
+      [session_id, what_went_well, what_was_challenging, key_insights,
+       concepts_mastered, concepts_need_work, study_strategy_effectiveness,
+       motivation_level, action_items, next_session_plan]
+    );
+    
+    res.json({ success: true, reflection: result.rows[0] });
+  } catch (error) {
+    console.error('Error saving study reflection:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Backup and export endpoints
+app.get('/api/data/export', async (req, res) => {
+  try {
+    const { format = 'json' } = req.query;
+    
+    // Export all user data
+    const data = {
+      topics: (await pool.query('SELECT * FROM topics ORDER BY created_at')).rows,
+      files: (await pool.query('SELECT * FROM files ORDER BY created_at')).rows,
+      study_sessions: (await pool.query('SELECT * FROM study_sessions ORDER BY session_start')).rows,
+      user_progress: (await pool.query('SELECT * FROM user_progress ORDER BY date')).rows,
+      exercises: (await pool.query('SELECT * FROM exercises ORDER BY created_at')).rows,
+      study_goals: (await pool.query('SELECT * FROM study_goals ORDER BY created_at')).rows,
+      settings: (await pool.query('SELECT * FROM user_settings')).rows,
+      exported_at: new Date().toISOString()
+    };
+    
+    if (format === 'csv') {
+      // Convert to CSV format for each table
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', 'attachment; filename=study_data_export.zip');
+      // Implementation for ZIP with CSV files would go here
+      res.json({ message: 'CSV export not yet implemented' });
+    } else {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename=study_data_export.json');
+      res.json(data);
+    }
+    
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
