@@ -30,6 +30,10 @@ data/reading-progress/*
 data/backups/*
 !data/backups/.gitkeep
 
+# Logs
+logs/
+*.log
+
 # IDE
 .vscode/
 .idea/
@@ -39,3 +43,7 @@ data/backups/*
 # OS
 .DS_Store
 Thumbs.db
+
+# Temporary files
+temp-*
+test-*.html
