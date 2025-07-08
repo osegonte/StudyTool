@@ -406,7 +406,9 @@ app.use((error, req, res, next) => {
 });
 
 // Initialize and start server
-const startServer = async () => {
+// Start session cleanup service
+const { startCleanupService } = require("./services/session-cleanup");
+startCleanupService();const startServer = async () => {
   console.log(`🚀 Starting Local Study Planner Backend...`);
   console.log(`👤 Database user: ${currentUser}`);
   
@@ -443,3 +445,8 @@ startServer().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
+
+// Page tracking routes for Phase 2
+const pageTrackingRoutes = require('./routes/page-tracking');
+const studySessionRoutes = require("./routes/study-sessions");
+app.use("/api/study-sessions", studySessionRoutes);app.use('/api/page-tracking', pageTrackingRoutes);

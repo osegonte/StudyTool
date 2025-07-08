@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Home } from 'lucide-react';
+import { ArrowLeft, Home, FileText } from 'lucide-react';
 import api from '../services/api';
+import SinglePagePDFViewer from '../components/SinglePagePDFViewer';
+import EnhancedPageTimer from '../components/EnhancedPageTimer';
 
 const PDFViewer = () => {
   const { fileId } = useParams();
   const [fileInfo, setFileInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     loadFile();
@@ -23,6 +26,11 @@ const PDFViewer = () => {
       setError('Failed to load PDF file');
       setLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    console.log(`📄 Page change: ${currentPage} → ${newPage}`);
+    setCurrentPage(newPage);
   };
 
   if (loading) {
@@ -61,20 +69,33 @@ const PDFViewer = () => {
         </div>
 
         <div className="file-title">
-          <h2>{fileInfo.original_name}</h2>
+          <div className="title-with-icon">
+            <FileText size={20} />
+            <h2>{fileInfo.original_name}</h2>
+          </div>
           <div className="progress-info">
             {fileInfo.page_count} pages • {Math.round(fileInfo.file_size / 1024)} KB
           </div>
         </div>
       </div>
 
-      <div className="viewer-content">
-        <iframe
-          src={pdfUrl}
-          width="100%"
-          height="100%"
-          style={{ border: 'none', minHeight: '80vh' }}
-          title={fileInfo.original_name}
+      {/* Enhanced Page Timer with Memory */}
+      <div className="timer-section">
+        <EnhancedPageTimer 
+          fileId={fileId}
+          currentPage={currentPage}
+          totalPages={fileInfo.page_count}
+        />
+      </div>
+
+      {/* Single Page PDF Viewer */}
+      <div className="single-page-section">
+        <SinglePagePDFViewer
+          fileUrl={pdfUrl}
+          totalPages={fileInfo.page_count}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          fileName={fileInfo.original_name}
         />
       </div>
     </div>
