@@ -589,3 +589,55 @@ app.get('/api/data/export', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Stage 4 routes
+const achievementsRoutes = require('./routes/achievements');
+const recommendationsRoutes = require('./routes/recommendations');
+const milestonesRoutes = require('./routes/milestones');
+
+app.use('/api/achievements', achievementsRoutes);
+app.use('/api/recommendations', recommendationsRoutes);
+app.use('/api/milestones', milestonesRoutes);
+
+// Enhanced dashboard stats with Stage 4 data
+app.get('/api/dashboard/stage4-stats', async (req, res) => {
+  try {
+    const stats = {};
+    
+    // Achievement stats
+    const achievementStats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_achievements,
+        COUNT(*) FILTER (WHERE ua.id IS NOT NULL) as unlocked_achievements,
+        COALESCE(SUM(a.xp_reward) FILTER (WHERE ua.id IS NOT NULL), 0) as achievement_xp
+      FROM achievements a
+      LEFT JOIN user_achievements ua ON a.id = ua.achievement_id
+    `);
+    
+    // Today's recommendations
+    const recommendationStats = await pool.query(`
+      SELECT 
+        COUNT(*) as total_recommendations,
+        COUNT(*) FILTER (WHERE is_completed = true) as completed_recommendations
+      FROM daily_recommendations 
+      WHERE date = CURRENT_DATE
+    `);
+    
+    // Recent milestones
+    const recentMilestones = await pool.query(`
+      SELECT * FROM study_milestones 
+      WHERE last_triggered IS NOT NULL 
+      ORDER BY last_triggered DESC 
+      LIMIT 3
+    `);
+    
+    stats.achievements = achievementStats.rows[0];
+    stats.daily_recommendations = recommendationStats.rows[0];
+    stats.recent_milestones = recentMilestones.rows;
+    
+    res.json(stats);
+  } catch (error) {
+    console.error('Error getting Stage 4 stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
