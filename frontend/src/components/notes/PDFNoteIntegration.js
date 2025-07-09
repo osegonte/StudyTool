@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Edit3, StickyNote } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Plus, Edit3, StickyNote } from 'lucide-react';
 import api from '../../services/api';
 
 const PDFNoteIntegration = ({ fileId, currentPage, selectedText, onNoteCreated }) => {
@@ -11,11 +11,7 @@ const PDFNoteIntegration = ({ fileId, currentPage, selectedText, onNoteCreated }
     note_type: 'general'
   });
 
-  useEffect(() => {
-    loadPageNotes();
-  }, [fileId, currentPage]);
-
-  const loadPageNotes = async () => {
+  const loadPageNotes = useCallback(async () => {
     try {
       const response = await api.get(`/notes?file_id=${fileId}`);
       // Filter notes that have PDF anchors for this page
@@ -26,7 +22,11 @@ const PDFNoteIntegration = ({ fileId, currentPage, selectedText, onNoteCreated }
     } catch (error) {
       console.error('Error loading page notes:', error);
     }
-  };
+  }, [fileId]);
+
+  useEffect(() => {
+    loadPageNotes();
+  }, [fileId, currentPage, loadPageNotes]);
 
   const handleCreateNote = async () => {
     try {
