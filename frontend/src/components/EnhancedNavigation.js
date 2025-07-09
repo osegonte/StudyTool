@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Folder, BookOpen, StickyNote, Trophy, Menu, X } from 'lucide-react';
+import { 
+  Home, FileText, Folder, BookOpen, StickyNote, Trophy, 
+  Menu, X, Activity, BarChart3, Settings, Timer 
+} from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 const EnhancedNavigation = () => {
@@ -9,10 +12,13 @@ const EnhancedNavigation = () => {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Dashboard', description: 'Overview & Stats' },
-    { path: '/files', icon: FileText, label: 'File Manager', description: 'PDFs & Documents' },
+    { path: '/files', icon: FileText, label: 'Documents', description: 'PDFs & Files' },
     { path: '/topics', icon: Folder, label: 'Topics', description: 'Study Categories' },
-    { path: '/notes', icon: StickyNote, label: 'Smart Notes', description: 'Knowledge Base' },
+    { path: '/sprints', icon: Timer, label: 'Sprints', description: 'Focus Sessions' },
+    { path: '/analytics', icon: BarChart3, label: 'Analytics', description: 'Progress Insights' },
+    { path: '/notes', icon: StickyNote, label: 'Notes', description: 'Knowledge Base' },
     { path: '/achievements', icon: Trophy, label: 'Achievements', description: 'Progress & Rewards' },
+    { path: '/settings', icon: Settings, label: 'Settings', description: 'Preferences' },
   ];
 
   const isActive = (path) => {
@@ -21,7 +27,6 @@ const EnhancedNavigation = () => {
 
   return (
     <>
-      {/* Mobile Menu Toggle */}
       <button 
         className="mobile-nav-toggle"
         onClick={() => setIsOpen(!isOpen)}
@@ -74,7 +79,6 @@ const EnhancedNavigation = () => {
         </div>
       </nav>
 
-      {/* Overlay for mobile */}
       {isOpen && (
         <div 
           className="nav-overlay"
