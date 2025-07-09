@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, FileText, Folder, BookOpen } from 'lucide-react';
+import { Home, FileText, Folder, BookOpen, StickyNote, Trophy } from 'lucide-react';
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,6 +9,8 @@ const Navigation = () => {
     { path: '/', icon: Home, label: 'Dashboard' },
     { path: '/files', icon: FileText, label: 'File Manager' },
     { path: '/topics', icon: Folder, label: 'Topics' },
+    { path: '/notes', icon: StickyNote, label: 'Smart Notes' },
+    { path: '/achievements', icon: Trophy, label: 'Achievements' },
   ];
 
   return (
@@ -22,7 +24,7 @@ const Navigation = () => {
           <li key={path}>
             <Link 
               to={path} 
-              className={`nav-link ${location.pathname === path ? 'active' : ''}`}
+              className={`nav-link ${location.pathname === path || (path !== '/' && location.pathname.startsWith(path)) ? 'active' : ''}`}
             >
               <Icon size={20} />
               <span>{label}</span>

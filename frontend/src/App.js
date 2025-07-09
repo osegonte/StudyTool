@@ -3,10 +3,13 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import EnhancedDashboard from './components/EnhancedDashboard';
 import FileManager from './pages/FileManager';
-import PDFViewerCompact from './pages/PDFViewerCompact';
+import PDFViewerSeamless from './pages/PDFViewerSeamless';
 import TopicManager from './pages/TopicManager';
+import NotesPage from './pages/notes/NotesPage';
 import AchievementDisplay from './components/AchievementDisplay';
 import './styles/App.css';
+import './styles/notes.css';
+import './styles/seamless-notes.css';
 
 function App() {
   return (
@@ -18,8 +21,9 @@ function App() {
             <Route path="/" element={<EnhancedDashboard />} />
             <Route path="/files" element={<FileManager />} />
             <Route path="/topics" element={<TopicManager />} />
+            <Route path="/notes/*" element={<NotesPage />} />
             <Route path="/achievements" element={<AchievementDisplay />} />
-            <Route path="/viewer/:fileId" element={<PDFViewerCompact />} />
+            <Route path="/viewer/:fileId" element={<PDFViewerSeamless />} />
           </Routes>
         </main>
       </div>

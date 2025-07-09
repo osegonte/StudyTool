@@ -641,3 +641,8 @@ app.get('/api/dashboard/stage4-stats', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Stage 5: Notes routes
+const notesRoutes = require('./routes/notes');
+app.use('/api/notes', notesRoutes);
+
