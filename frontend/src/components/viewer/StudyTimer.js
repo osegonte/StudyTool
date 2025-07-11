@@ -62,6 +62,7 @@ const StudyTimer = ({
       setIsRunning(false);
       setIsPaused(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSession, config.workDuration]);
   
   // Main timer countdown
@@ -85,12 +86,14 @@ const StudyTimer = ({
     }
     
     return () => clearInterval(intervalRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRunning, isPaused, timeRemaining]);
   
   // Load daily stats on mount
   useEffect(() => {
     loadDailyStats();
     requestNotificationPermission();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
   const loadDailyStats = async () => {

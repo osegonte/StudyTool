@@ -1,3 +1,11 @@
+#!/bin/bash
+
+# Quick fix for the missing migration file
+
+echo "🔧 Quick fix for migration file..."
+
+# Create the clean migration file directly
+cat > backend/migrations/001_studytool_schema.sql << 'EOF'
 -- StudyTool - Clean Database Schema
 -- Fixed migration file
 
@@ -162,3 +170,82 @@ COMMENT ON TABLE files IS 'PDF files with enhanced metadata';
 COMMENT ON TABLE study_sessions IS 'Detailed study session tracking';
 COMMENT ON TABLE reading_progress IS 'Per-file reading progress tracking';
 COMMENT ON TABLE notes IS 'Study notes with linking capabilities';
+EOF
+
+echo "✅ Migration file created!"
+
+# Now run the migration
+echo "🔄 Running database migration..."
+cd backend
+
+if node src/migrate.js; then
+    echo "✅ Database migration completed successfully!"
+else
+    echo "❌ Migration failed!"
+    exit 1
+fi
+
+cd ..
+
+echo "✅ Database setup complete!"
+echo ""
+echo "🚀 Now starting the application..."
+
+# Kill any existing processes
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+
+# Start backend
+echo "🔧 Starting backend..."
+cd backend
+npm start &
+BACKEND_PID=$!
+cd ..
+
+sleep 3
+
+# Start frontend  
+echo "🎨 Starting frontend..."
+cd frontend
+npm start &
+FRONTEND_PID=$!
+cd ..
+
+sleep 8
+
+# Check if services are running
+if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
+    echo "✅ Backend running on http://localhost:3001"
+else
+    echo "⚠️  Backend may still be starting..."
+fi
+
+if curl -s http://localhost:3000 > /dev/null 2>&1; then
+    echo "✅ Frontend running on http://localhost:3000"
+else
+    echo "⚠️  Frontend may still be starting..."
+fi
+
+echo ""
+echo "🎉 Study Planner is ready!"
+echo "📚 Open: http://localhost:3000"
+echo ""
+echo "Press Ctrl+C to stop..."
+
+# Cleanup function
+cleanup() {
+    echo "🔌 Stopping services..."
+    kill $BACKEND_PID 2>/dev/null || true
+    kill $FRONTEND_PID 2>/dev/null || true
+    lsof -ti:3000 | xargs kill -9 2>/dev/null || true
+    lsof -ti:3001 | xargs kill -9 2>/dev/null || true
+    echo "✅ Services stopped."
+    exit 0
+}
+
+trap 'cleanup' INT
+
+# Keep running
+while true; do 
+    sleep 1
+done

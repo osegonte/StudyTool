@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  Upload, FileText, Clock, Target, TrendingUp, Timer, 
-  BookOpen, Zap, ArrowRight, Play, BarChart3, Award
-} from 'lucide-react';
+  Upload, FileText, Clock, Target, TrendingUp, Timer} from 'lucide-react';
 import api from '../../services/api';
 
 const AppleDashboard = () => {

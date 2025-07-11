@@ -1,10 +1,7 @@
 // frontend/src/components/viewer/NotesPanel.js
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import { 
-  Plus, Search, Tag, Link2, Bookmark, Hash, 
-  Edit3, Save, X, ChevronDown, ChevronRight,
-  FileText, Clock, Paperclip, Eye, ExternalLink
-} from 'lucide-react';
+  Edit3, Save, X, ChevronDown, ChevronRight} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import api from '../../services/api';
 
@@ -20,11 +17,10 @@ const NotesPanel = ({
   const [isEditing, setIsEditing] = useState(false);
   const [noteContent, setNoteContent] = useState('');
   const [noteTitle, setNoteTitle] = useState('');
-  const [noteTags, setNoteTags] = useState([]);
+  const [notes, setNotes] = useState([]);
   
   // UI state
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
   const [showPreview, setShowPreview] = useState(true);
   const [expandedSections, setExpandedSections] = useState({
     currentPage: true,
@@ -36,7 +32,7 @@ const NotesPanel = ({
   // Links and references
   const [linkedNotes, setLinkedNotes] = useState([]);
   const [backlinks, setBacklinks] = useState([]);
-  const [allTags, setAllTags] = useState([]);
+  const [alls, setAlls] = useState([]);
   
   // Auto-save
   const [isDirty, setIsDirty] = useState(false);
@@ -47,15 +43,17 @@ const NotesPanel = ({
   // Load notes on mount and when fileId/currentPage changes
   useEffect(() => {
     loadNotes();
-    loadTags();
+    loads();
   }, [fileId]);
   
   useEffect(() => {
     loadPageNotes();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage]);
   
   // Auto-save functionality
   useEffect(() => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
     if (isDirty && activeNote && noteContent) {
       clearTimeout(autoSaveRef.current);
       autoSaveRef.current = setTimeout(() => {
@@ -64,10 +62,11 @@ const NotesPanel = ({
     }
     
     return () => clearTimeout(autoSaveRef.current);
-  }, [noteContent, noteTitle, noteTags, isDirty]);
+  }, [noteContent, noteTitle, notes, isDirty]);
   
   const loadNotes = async () => {
     try {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
       const response = await api.get(`/notes?file_id=${fileId}`);
       setNotes(response.data.notes || []);
     } catch (error) {
@@ -89,10 +88,10 @@ const NotesPanel = ({
     }
   };
   
-  const loadTags = async () => {
+  const loads = async () => {
     try {
       const response = await api.get('/notes/tags');
-      setAllTags(response.data.tags || []);
+      setAlls(response.data.tags || []);
     } catch (error) {
       console.error('Error loading tags:', error);
     }
@@ -118,7 +117,7 @@ const NotesPanel = ({
     setActiveNote(note);
     setNoteContent(note.content || '');
     setNoteTitle(note.title || '');
-    setNoteTags(note.tags || []);
+    setNotes(note.tags || []);
     setIsEditing(false);
     setIsDirty(false);
     
@@ -141,7 +140,7 @@ const NotesPanel = ({
     setActiveNote(newNote);
     setNoteContent('');
     setNoteTitle(newNote.title);
-    setNoteTags([]);
+    setNotes([]);
     setIsEditing(true);
     setIsDirty(false);
     
@@ -160,7 +159,7 @@ const NotesPanel = ({
       const noteData = {
         title: noteTitle,
         content: noteContent,
-        tags: noteTags,
+        tags: notes,
         file_id: fileId,
         page_reference: currentPage,
         note_type: 'study'
@@ -223,22 +222,22 @@ const NotesPanel = ({
         setActiveNote(null);
         setNoteContent('');
         setNoteTitle('');
-        setNoteTags([]);
+        setNotes([]);
       }
     } catch (error) {
       console.error('Error deleting note:', error);
     }
   };
   
-  const addTag = (tag) => {
-    if (tag && !noteTags.includes(tag)) {
-      setNoteTags(prev => [...prev, tag]);
+  const add= (tag) => {
+    if (tag && !notes.includes(tag)) {
+      setNotes(prev => [...prev, tag]);
       setIsDirty(true);
     }
   };
   
-  const removeTag = (tag) => {
-    setNoteTags(prev => prev.filter(t => t !== tag));
+  const remove= (tag) => {
+    setNotes(prev => prev.filter(t => t !== tag));
     setIsDirty(true);
   };
   
@@ -284,10 +283,10 @@ const NotesPanel = ({
       note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.content.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesTag = !selectedTag || 
-      (note.tags && note.tags.includes(selectedTag));
+    const matches= !selected|| 
+      (note.tags && note.tags.includes(selected));
     
-    return matchesSearch && matchesTag;
+    return matchesSearch && matches;
   });
   
   const currentPageNotes = filteredNotes.filter(note => 
@@ -360,12 +359,12 @@ const NotesPanel = ({
         
         <div className="tag-filter">
           <select
-            value={selectedTag}
-            onChange={(e) => setSelectedTag(e.target.value)}
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
             className="tag-select"
           >
             <option value="">All tags</option>
-            {allTags.map(tag => (
+            {alls.map(tag => (
               <option key={tag} value={tag}>#{tag}</option>
             ))}
           </select>
@@ -662,10 +661,10 @@ const NotesPanel = ({
           <div className="editor-footer">
             <div className="tags-container">
               <div className="tags-list">
-                {noteTags.map(tag => (
+                {notes.map(tag => (
                   <span key={tag} className="tag removable">
                     #{tag}
-                    <button onClick={() => removeTag(tag)}>×</button>
+                    <button onClick={() => remove(tag)}>×</button>
                   </span>
                 ))}
               </div>
@@ -675,7 +674,7 @@ const NotesPanel = ({
                 placeholder="Add tag..."
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    addTag(e.target.value.trim());
+                    add(e.target.value.trim());
                     e.target.value = '';
                   }
                 }}

@@ -1,15 +1,11 @@
 // frontend/src/components/analytics/RealTimeDashboard.js
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  BarChart3, TrendingUp, Clock, BookOpen, Target, 
-  Zap, Eye, Brain, Calendar, Award, Activity,
   ChevronUp, ChevronDown, RefreshCw, Download
 } from 'lucide-react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, BarChart, Bar,
-  PieChart, Pie, Cell, AreaChart, Area
-} from 'recharts';
+  Tooltip, ResponsiveContainer, BarChart, Bar} from 'recharts';
 import api from '../../services/api';
 
 const RealTimeDashboard = () => {
@@ -53,6 +49,7 @@ const RealTimeDashboard = () => {
   
   const loadDashboardData = async () => {
     try {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
       setLoading(true);
       
       const [

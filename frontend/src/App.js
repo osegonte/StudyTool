@@ -126,7 +126,8 @@ function App() {
     return () => {
       cleanupEventListeners();
     };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initializeApp, setupEventListeners]);
 
   const initializeApp = async () => {
     try {

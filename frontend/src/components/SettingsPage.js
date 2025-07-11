@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  User, Settings, Palette, Download, Trash2, 
-  Moon, Sun, Monitor, Save, Bell, Clock, Target
-} from 'lucide-react';
+  User, Settings, Palette, Download, Trash2} from 'lucide-react';
 import api from "../services/api";
 
 const SettingsPage = () => {
