@@ -16,7 +16,6 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../../data/pdfs')));
 
-// Get current user for database connection
 const currentUser = process.env.USER || process.env.USERNAME || 'postgres';
 
 // PostgreSQL connection
@@ -32,26 +31,11 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-// Test database connection
-const testConnection = async () => {
-  try {
-    const client = await pool.connect();
-    console.log('✅ Connected to PostgreSQL database');
-    client.release();
-    return true;
-  } catch (err) {
-    console.error('❌ Error connecting to PostgreSQL database:', err.message);
-    return false;
-  }
-};
-
-// Initialize database tables
+// Initialize database
 const initializeDatabase = async () => {
   try {
-    // Create UUID extension if not exists
     await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
     
-    // Create basic tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS topics (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -90,23 +74,11 @@ const initializeDatabase = async () => {
         time_spent INTEGER DEFAULT 0,
         last_read TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         bookmarks JSONB DEFAULT '[]'::jsonb,
-        notes TEXT,
-        current_page_start_time TIMESTAMP,
-        total_reading_time_seconds INTEGER DEFAULT 0,
-        pages_read_count INTEGER DEFAULT 0,
-        current_session_id UUID,
-        last_session_start TIMESTAMP,
-        total_study_time_seconds INTEGER DEFAULT 0,
-        session_count INTEGER DEFAULT 0
+        notes TEXT
       )
     `);
 
-    // Create indexes
-    await pool.query('CREATE INDEX IF NOT EXISTS idx_files_topic_id ON files(topic_id)');
-    await pool.query('CREATE INDEX IF NOT EXISTS idx_reading_progress_file_id ON reading_progress(file_id)');
-    await pool.query('CREATE INDEX IF NOT EXISTS idx_files_created_at ON files(created_at DESC)');
-
-    console.log('📊 PostgreSQL database initialized successfully');
+    console.log('📊 Database initialized successfully');
     return true;
   } catch (error) {
     console.error('❌ Error initializing database:', error.message);
@@ -114,7 +86,7 @@ const initializeDatabase = async () => {
   }
 };
 
-// Configure multer for file uploads
+// Configure multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../../data/pdfs');
@@ -137,21 +109,17 @@ const upload = multer({
       cb(new Error('Only PDF files are allowed'), false);
     }
   },
-  limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB limit
-  }
+  limits: { fileSize: 100 * 1024 * 1024 }
 });
 
-// Health check
+// Routes
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ 
       status: 'healthy', 
       message: 'Study Planner Backend is running',
-      timestamp: new Date().toISOString(),
-      database: 'PostgreSQL connected',
-      user: currentUser
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(500).json({ 
@@ -168,7 +136,6 @@ app.get('/api/topics', async (req, res) => {
     const result = await pool.query('SELECT * FROM topics ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting topics:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -182,7 +149,6 @@ app.post('/api/topics', async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error creating topic:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -190,16 +156,14 @@ app.post('/api/topics', async (req, res) => {
 // Files routes
 app.get('/api/files', async (req, res) => {
   try {
-    const query = `
+    const result = await pool.query(`
       SELECT f.*, t.name as topic_name, t.color as topic_color, t.icon as topic_icon
       FROM files f
       LEFT JOIN topics t ON f.topic_id = t.id
       ORDER BY f.created_at DESC
-    `;
-    const result = await pool.query(query);
+    `);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error getting files:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -212,13 +176,11 @@ app.post('/api/files/upload', upload.single('pdf'), async (req, res) => {
 
     const { topic_id } = req.body;
     
-    // Extract PDF metadata
     const pdfBuffer = await fs.readFile(req.file.path);
     let pdfData;
     try {
       pdfData = await pdfParse(pdfBuffer);
     } catch (error) {
-      console.warn('Could not parse PDF metadata:', error.message);
       pdfData = { numpages: 0, info: {} };
     }
 
@@ -231,7 +193,6 @@ app.post('/api/files/upload', upload.single('pdf'), async (req, res) => {
 
     const fileData = result.rows[0];
 
-    // Create initial reading progress entry
     await pool.query(
       'INSERT INTO reading_progress (file_id, total_pages) VALUES ($1, $2)',
       [fileData.id, pdfData.numpages || 0]
@@ -242,7 +203,6 @@ app.post('/api/files/upload', upload.single('pdf'), async (req, res) => {
       file: fileData
     });
   } catch (error) {
-    console.error('Error uploading file:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -256,7 +216,6 @@ app.get('/api/files/:id/metadata', async (req, res) => {
     }
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error getting file metadata:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -264,18 +223,10 @@ app.get('/api/files/:id/metadata', async (req, res) => {
 // Dashboard stats
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
-    const stats = {};
-    
-    // Get total counts
     const filesResult = await pool.query('SELECT COUNT(*) as count FROM files');
     const topicsResult = await pool.query('SELECT COUNT(*) as count FROM topics');
     const pagesResult = await pool.query('SELECT COALESCE(SUM(page_count), 0) as total FROM files');
     
-    stats.totalFiles = parseInt(filesResult.rows[0].count);
-    stats.totalTopics = parseInt(topicsResult.rows[0].count);
-    stats.totalPages = parseInt(pagesResult.rows[0].total);
-    
-    // Get recent files
     const recentFilesResult = await pool.query(`
       SELECT f.*, t.name as topic_name, t.color as topic_color 
       FROM files f 
@@ -283,81 +234,34 @@ app.get('/api/dashboard/stats', async (req, res) => {
       ORDER BY f.created_at DESC 
       LIMIT 5
     `);
-    stats.recentFiles = recentFilesResult.rows;
     
-    res.json(stats);
+    res.json({
+      totalFiles: parseInt(filesResult.rows[0].count),
+      totalTopics: parseInt(topicsResult.rows[0].count),
+      totalPages: parseInt(pagesResult.rows[0].total),
+      recentFiles: recentFilesResult.rows
+    });
   } catch (error) {
-    console.error('Error getting dashboard stats:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Simple user progress endpoint
-app.get('/api/user-progress/stats', async (req, res) => {
-  try {
-    const stats = {
-      total_xp: 0,
-      current_level: 1,
-      current_streak: 0,
-      daily_goal: 60,
-      today_progress: {
-        study_minutes: 0,
-        pages_read: 0,
-        xp_earned: 0
-      }
-    };
-    res.json(stats);
-  } catch (error) {
-    console.error('Error getting user progress:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Error handling middleware
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large. Maximum size is 100MB.' });
-    }
-  }
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: error.message });
-});
-
-// Initialize and start server
+// Start server
 const startServer = async () => {
   console.log(`🚀 Starting Study Planner Backend...`);
-  console.log(`👤 Database user: ${currentUser}`);
   
-  // Test connection first
-  const connected = await testConnection();
-  if (!connected) {
-    console.error('❌ Cannot connect to database. Please check PostgreSQL installation.');
+  const initialized = await initializeDatabase();
+  if (!initialized) {
+    console.error('❌ Cannot initialize database');
     process.exit(1);
   }
   
-  // Initialize database
-  const initialized = await initializeDatabase();
-  if (!initialized) {
-    console.error('❌ Cannot initialize database. Continuing anyway...');
-  }
-  
-  // Start server
   app.listen(PORT, () => {
     console.log(`🚀 Study Planner Backend running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    console.log(`🐘 Database: PostgreSQL (user: ${currentUser})`);
   });
 };
 
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('Shutting down gracefully...');
-  await pool.end();
-  process.exit(0);
-});
-
-// Start the server
 startServer().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);

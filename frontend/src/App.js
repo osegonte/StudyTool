@@ -1,21 +1,23 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import AppleNavigation from './components/apple/AppleNavigation';
-import AppleDashboard from './components/apple/AppleDashboard';
+import Navigation from './components/Navigation';
+import Dashboard from './components/Dashboard';
 import DocumentManager from './components/DocumentManager';
 import TopicManager from './components/TopicManager';
+import PDFViewer from './components/PDFViewer';
 import './styles/App.css';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <AppleNavigation />
-        <main className="ml-64 min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="main-content">
           <Routes>
-            <Route path="/" element={<AppleDashboard />} />
+            <Route path="/" element={<Dashboard />} />
             <Route path="/files" element={<DocumentManager />} />
             <Route path="/topics" element={<TopicManager />} />
+            <Route path="/viewer/:fileId" element={<PDFViewer />} />
           </Routes>
         </main>
       </div>

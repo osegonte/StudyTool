@@ -1,7 +1,7 @@
 {
-  "name": "local-study-planner-frontend",
-  "version": "2.0.0",
-  "description": "Local Study Planner Frontend - Complete Feature Set",
+  "name": "study-planner-frontend",
+  "version": "1.0.0",
+  "description": "Simple Study Planner Frontend",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
@@ -9,8 +9,7 @@
     "react-router-dom": "^6.8.0",
     "react-scripts": "5.0.1",
     "axios": "^1.10.0",
-    "lucide-react": "^0.263.1",
-    "recharts": "^2.8.0"
+    "lucide-react": "^0.263.1"
   },
   "scripts": {
     "start": "react-scripts start",
