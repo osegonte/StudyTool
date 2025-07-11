@@ -4,7 +4,7 @@ import {
   Upload, FileText, Trash2, Star, Search, Filter, 
   Grid, List, MoreHorizontal, Eye, Edit3
 } from 'lucide-react';
-import api from '../../services/api';
+import api from "../services/api";
 
 const DocumentManager = () => {
   const [files, setFiles] = useState([]);

@@ -3,7 +3,7 @@ import {
   User, Settings, Palette, Download, Trash2, 
   Moon, Sun, Monitor, Save, Bell, Clock, Target
 } from 'lucide-react';
-import api from '../../services/api';
+import api from "../services/api";
 
 const SettingsPage = () => {
   const [activeTab, setActiveTab] = useState('profile');

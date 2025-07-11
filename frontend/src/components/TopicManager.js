@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Folder, Calendar, Target } from 'lucide-react';
-import api from '../../services/api';
+import api from "../services/api";
 
 const TopicManager = () => {
   const [topics, setTopics] = useState([]);
