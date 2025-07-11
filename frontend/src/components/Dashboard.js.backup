@@ -21,23 +21,13 @@ const Dashboard = () => {
       setStats(response.data);
     } catch (error) {
       console.error('Error loading stats:', error);
-      setStats({
-        totalFiles: 0,
-        totalPages: 0,
-        recentFiles: []
-      });
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return (
-      <div>
-        <h1>Study Dashboard</h1>
-        <p className="mb-6">Loading your study planner...</p>
-      </div>
-    );
+    return <div>Loading...</div>;
   }
 
   return (
