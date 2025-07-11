@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Home, Search, ZoomIn, ZoomOut, RotateCw, 
-  Bookmark, Share, Moon, Sun, Timer, Target, Activity
+  Bookmark, Moon, Sun, Timer, Target, Activity, 
+  StickyNote, Plus, Eye
 } from 'lucide-react';
-import api from '../../services/api';
-import SinglePagePDFViewer from '../SinglePagePDFViewer';
+import api from '../services/api';
+import SinglePagePDFViewer from './SinglePagePDFViewer';
+import CompactSessionToolbar from './focus/CompactSessionToolbar';
+import FocusMode from './focus/FocusMode';
+import EnhancedSessionTracker from './focus/EnhancedSessionTracker';
+import PDFNoteIntegration from './notes/PDFNoteIntegration';
+import QuickNoteModal from './notes/QuickNoteModal';
+import HighlightNotePopup from './notes/HighlightNotePopup';
 
 const AppleReaderInterface = () => {
   const { fileId } = useParams();
@@ -14,33 +21,40 @@ const AppleReaderInterface = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showToolbar, setShowToolbar] = useState(true);
   const [readerMode, setReaderMode] = useState('normal');
-  const [sessionData, setSessionData] = useState({
-    timeOnPage: 0,
-    totalTime: 0,
-    pagesRead: 0,
-    estimatedRemaining: 0
+  const [focusModeActive, setFocusModeActive] = useState(false);
+  const [sessionData, setSessionData] = useState({});
+  const [selectedText, setSelectedText] = useState('');
+  const [showQuickNote, setShowQuickNote] = useState(false);
+  const [showHighlightPopup, setShowHighlightPopup] = useState(false);
+  const [highlightPosition, setHighlightPosition] = useState({ x: 0, y: 0 });
+  const [sidebarMode, setSidebarMode] = useState('notes'); // notes, analytics, bookmarks
+  const toolbarTimeoutRef = useRef(null);
+
+  // Enhanced session tracker
+  const sessionTracker = EnhancedSessionTracker({ 
+    fileId, 
+    currentPage, 
+    onSessionData: setSessionData 
   });
 
   useEffect(() => {
     loadFile();
+    setupToolbarAutoHide();
+    setupTextSelection();
     
-    // Auto-hide toolbar after 5 seconds of inactivity
-    const hideTimer = setTimeout(() => {
-      setShowToolbar(false);
-    }, 5000);
-
-    const handleMouseMove = () => {
-      setShowToolbar(true);
-      clearTimeout(hideTimer);
-      setTimeout(() => setShowToolbar(false), 5000);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      clearTimeout(hideTimer);
+      if (toolbarTimeoutRef.current) {
+        clearTimeout(toolbarTimeoutRef.current);
+      }
     };
   }, [fileId]);
+
+  useEffect(() => {
+    // Page change tracking
+    if (sessionTracker.actions) {
+      sessionTracker.actions.trackPageInteraction('view', currentPage);
+    }
+  }, [currentPage]);
 
   const loadFile = async () => {
     try {
@@ -53,26 +67,81 @@ const AppleReaderInterface = () => {
     }
   };
 
+  const setupToolbarAutoHide = () => {
+    const resetTimer = () => {
+      setShowToolbar(true);
+      if (toolbarTimeoutRef.current) {
+        clearTimeout(toolbarTimeoutRef.current);
+      }
+      toolbarTimeoutRef.current = setTimeout(() => {
+        if (!focusModeActive) setShowToolbar(false);
+      }, 3000);
+    };
+
+    const handleMouseMove = () => resetTimer();
+    const handleKeyPress = () => resetTimer();
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('keypress', handleKeyPress);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('keypress', handleKeyPress);
+    };
+  };
+
+  const setupTextSelection = () => {
+    const handleTextSelection = () => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      
+      if (text.length > 3) {
+        setSelectedText(text);
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        setHighlightPosition({
+          x: rect.left + window.scrollX,
+          y: rect.top + window.scrollY
+        });
+        setShowHighlightPopup(true);
+      } else {
+        setSelectedText('');
+        setShowHighlightPopup(false);
+      }
+    };
+
+    document.addEventListener('mouseup', handleTextSelection);
+    return () => document.removeEventListener('mouseup', handleTextSelection);
+  };
+
   const handlePageChange = (newPage) => {
     setCurrentPage(newPage);
-    // Update session data
-    setSessionData(prev => ({
-      ...prev,
-      pagesRead: Math.max(prev.pagesRead, newPage),
-      estimatedRemaining: calculateEstimatedTime(newPage)
-    }));
+    setSelectedText('');
+    setShowHighlightPopup(false);
   };
 
-  const calculateEstimatedTime = (currentPage) => {
-    if (!fileInfo) return 0;
-    const remainingPages = fileInfo.page_count - currentPage;
-    const avgTimePerPage = 2; // minutes
-    return remainingPages * avgTimePerPage;
+  const toggleFocusMode = () => {
+    setFocusModeActive(!focusModeActive);
+    if (!focusModeActive) {
+      setShowToolbar(false);
+      setSidebarMode(null);
+    } else {
+      setShowToolbar(true);
+      setSidebarMode('notes');
+    }
   };
 
-  const toggleReaderMode = () => {
-    setReaderMode(prev => prev === 'normal' ? 'focus' : 'normal');
+  const handleQuickNoteShortcut = (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'N') {
+      e.preventDefault();
+      setShowQuickNote(true);
+    }
   };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleQuickNoteShortcut);
+    return () => document.removeEventListener('keydown', handleQuickNoteShortcut);
+  }, []);
 
   if (loading) {
     return (
@@ -87,7 +156,7 @@ const AppleReaderInterface = () => {
     return (
       <div className="reader-error">
         <h3>Document not found</h3>
-        <Link to="/files" className="btn-primary">
+        <Link to="/files" className="btn btn-primary">
           <ArrowLeft size={16} />
           Back to Files
         </Link>
@@ -96,37 +165,14 @@ const AppleReaderInterface = () => {
   }
 
   return (
-    <div className={`apple-reader ${readerMode}`}>
-      {/* Three-Pane Layout */}
-      <div className="reader-layout">
-        {/* Left Thumbnails Panel */}
-        <div className="thumbnails-panel">
-          <div className="thumbnails-header">
-            <h3>Pages</h3>
-            <span className="page-count">{fileInfo.page_count}</span>
-          </div>
-          
-          <div className="thumbnails-grid">
-            {Array.from({ length: fileInfo.page_count }, (_, i) => (
-              <div
-                key={i + 1}
-                className={`thumbnail ${currentPage === i + 1 ? 'active' : ''}`}
-                onClick={() => handlePageChange(i + 1)}
-              >
-                <div className="thumbnail-preview">
-                  <span>{i + 1}</span>
-                </div>
-                <div className="thumbnail-label">
-                  Page {i + 1}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Center Viewer */}
-        <div className="viewer-container">
-          {/* Auto-hide Toolbar */}
+    <FocusMode 
+      isActive={focusModeActive} 
+      onToggle={toggleFocusMode}
+      currentMode={readerMode}
+    >
+      <div className={`apple-reader ${readerMode} ${focusModeActive ? 'focus-active' : ''}`}>
+        {/* Enhanced Header */}
+        {(!focusModeActive || showToolbar) && (
           <div className={`reader-toolbar ${showToolbar ? 'visible' : 'hidden'}`}>
             <div className="toolbar-left">
               <Link to="/files" className="toolbar-btn">
@@ -176,32 +222,119 @@ const AppleReaderInterface = () => {
             </div>
 
             <div className="toolbar-right">
-              <button className="toolbar-btn">
+              <button className="toolbar-btn" title="Search (Ctrl+F)">
                 <Search size={18} />
               </button>
-              <button className="toolbar-btn">
+              <button className="toolbar-btn" title="Zoom Out">
                 <ZoomOut size={18} />
               </button>
-              <button className="toolbar-btn">
+              <button className="toolbar-btn" title="Zoom In">
                 <ZoomIn size={18} />
               </button>
-              <button className="toolbar-btn">
+              <button className="toolbar-btn" title="Rotate">
                 <RotateCw size={18} />
               </button>
-              <button className="toolbar-btn">
+              <button className="toolbar-btn" title="Bookmark Page">
                 <Bookmark size={18} />
               </button>
               <button 
                 className="toolbar-btn"
-                onClick={toggleReaderMode}
+                onClick={() => setShowQuickNote(true)}
+                title="Quick Note (Ctrl+Shift+N)"
               >
-                {readerMode === 'normal' ? <Moon size={18} /> : <Sun size={18} />}
+                <StickyNote size={18} />
+              </button>
+              <button 
+                className="toolbar-btn"
+                onClick={toggleFocusMode}
+                title={focusModeActive ? 'Exit Focus Mode' : 'Enter Focus Mode'}
+              >
+                {focusModeActive ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             </div>
           </div>
+        )}
+
+        {/* Main Content Layout */}
+        <div className="reader-layout">
+          {/* Sidebar - Notes/Analytics Panel */}
+          {!focusModeActive && sidebarMode && (
+            <div className="reader-sidebar">
+              <div className="sidebar-tabs">
+                <button 
+                  className={`sidebar-tab ${sidebarMode === 'notes' ? 'active' : ''}`}
+                  onClick={() => setSidebarMode('notes')}
+                >
+                  <StickyNote size={16} />
+                  Notes
+                </button>
+                <button 
+                  className={`sidebar-tab ${sidebarMode === 'analytics' ? 'active' : ''}`}
+                  onClick={() => setSidebarMode('analytics')}
+                >
+                  <Activity size={16} />
+                  Progress
+                </button>
+                <button 
+                  className={`sidebar-tab ${sidebarMode === 'bookmarks' ? 'active' : ''}`}
+                  onClick={() => setSidebarMode('bookmarks')}
+                >
+                  <Bookmark size={16} />
+                  Bookmarks
+                </button>
+              </div>
+
+              <div className="sidebar-content">
+                {sidebarMode === 'notes' && (
+                  <PDFNoteIntegration
+                    fileId={fileId}
+                    currentPage={currentPage}
+                    selectedText={selectedText}
+                    onNoteCreated={() => {
+                      setSelectedText('');
+                      setShowHighlightPopup(false);
+                    }}
+                  />
+                )}
+                
+                {sidebarMode === 'analytics' && (
+                  <div className="session-analytics">
+                    <h4>📊 Session Analytics</h4>
+                    <div className="analytics-grid">
+                      <div className="metric">
+                        <span className="label">Current Page Time</span>
+                        <span className="value">{sessionData.formattedCurrentPageTime || '0:00'}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="label">Session Total</span>
+                        <span className="value">{sessionData.formattedTotalTime || '0:00'}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="label">Pages Visited</span>
+                        <span className="value">{sessionData.pagesVisitedCount || 0}</span>
+                      </div>
+                      <div className="metric">
+                        <span className="label">Daily Progress</span>
+                        <span className="value">{sessionData.dailyStats?.studyMinutes || 0}m</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {sidebarMode === 'bookmarks' && (
+                  <div className="bookmarks-panel">
+                    <h4>🔖 Bookmarks</h4>
+                    <div className="bookmark-list">
+                      <p className="empty-state">No bookmarks yet. Click the bookmark icon to save important pages.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* PDF Viewer */}
-          <div className="pdf-viewer-area">
+          <div className="viewer-container">
             <SinglePagePDFViewer
               fileUrl={`http://localhost:3001/uploads/${fileInfo.filename}`}
               totalPages={fileInfo.page_count}
@@ -212,62 +345,51 @@ const AppleReaderInterface = () => {
           </div>
         </div>
 
-        {/* Right Slide-over Panel */}
-        <div className="sidepanel-container">
-          <div className="sidepanel-header">
-            <h3>Study Session</h3>
-            <div className="session-mode">
-              <Activity size={16} />
-              <span>Active</span>
-            </div>
-          </div>
+        {/* Session Toolbar - Always Visible */}
+        <CompactSessionToolbar
+          fileId={fileId}
+          currentPage={currentPage}
+          totalPages={fileInfo.page_count}
+          onFocusModeToggle={toggleFocusMode}
+          focusModeActive={focusModeActive}
+        />
 
-          <div className="session-timer">
-            <div className="timer-display">
-              <Timer size={20} />
-              <span className="time-text">
-                {Math.floor(sessionData.totalTime / 60)}:{(sessionData.totalTime % 60).toString().padStart(2, '0')}
-              </span>
-            </div>
-            <div className="timer-label">Session Time</div>
-          </div>
+        {/* Modals and Popups */}
+        {showHighlightPopup && selectedText && (
+          <HighlightNotePopup
+            selectedText={selectedText}
+            position={highlightPosition}
+            fileId={fileId}
+            currentPage={currentPage}
+            onClose={() => {
+              setShowHighlightPopup(false);
+              setSelectedText('');
+            }}
+            onNoteSaved={() => {
+              setShowHighlightPopup(false);
+              setSelectedText('');
+              // Refresh notes if sidebar is open
+              if (sidebarMode === 'notes') {
+                // Trigger refresh
+              }
+            }}
+          />
+        )}
 
-          <div className="page-notes">
-            <div className="notes-header">
-              <h4>Page {currentPage} Notes</h4>
-              <button className="add-note-btn">+</button>
-            </div>
-            <div className="notes-content">
-              <p className="notes-placeholder">
-                Click to add notes for this page...
-              </p>
-            </div>
-          </div>
-
-          <div className="session-progress">
-            <div className="progress-item">
-              <span className="progress-label">Pages Read</span>
-              <span className="progress-value">{sessionData.pagesRead}</span>
-            </div>
-            <div className="progress-item">
-              <span className="progress-label">Time Remaining</span>
-              <span className="progress-value">{sessionData.estimatedRemaining}m</span>
-            </div>
-          </div>
-
-          <div className="session-actions">
-            <button className="btn-primary">
-              <Target size={16} />
-              Mark as Read
-            </button>
-            <button className="btn-secondary">
-              <Bookmark size={16} />
-              Bookmark
-            </button>
-          </div>
-        </div>
+        <QuickNoteModal
+          isOpen={showQuickNote}
+          onClose={() => setShowQuickNote(false)}
+          fileId={fileId}
+          currentPage={currentPage}
+          initialContent={selectedText}
+          onNoteSaved={() => {
+            setShowQuickNote(false);
+            setSelectedText('');
+            // Refresh notes if sidebar is open
+          }}
+        />
       </div>
-    </div>
+    </FocusMode>
   );
 };
 

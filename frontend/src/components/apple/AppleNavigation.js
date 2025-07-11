@@ -1,9 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Home, FileText, Folder, Timer, BarChart3, StickyNote, 
-  Trophy, Settings, BookOpen
-} from 'lucide-react';
+import { Home, FileText, Folder, BookOpen } from 'lucide-react';
 
 const AppleNavigation = () => {
   const location = useLocation();
@@ -12,11 +9,6 @@ const AppleNavigation = () => {
     { path: '/', icon: Home, label: 'Dashboard' },
     { path: '/files', icon: FileText, label: 'Documents' },
     { path: '/topics', icon: Folder, label: 'Topics' },
-    { path: '/sprints', icon: Timer, label: 'Sprints' },
-    { path: '/analytics', icon: BarChart3, label: 'Analytics' },
-    { path: '/notes', icon: StickyNote, label: 'Notes' },
-    { path: '/achievements', icon: Trophy, label: 'Achievements' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
   ];
 
   const isActive = (path) => {
@@ -53,19 +45,6 @@ const AppleNavigation = () => {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Study Streak</span>
-            <span className="font-medium">🔥 0 days</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Total XP</span>
-            <span className="font-medium">⭐ 0 points</span>
-          </div>
-        </div>
       </div>
     </nav>
   );

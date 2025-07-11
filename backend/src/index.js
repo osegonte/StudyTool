@@ -19,14 +19,14 @@ app.use('/uploads', express.static(path.join(__dirname, '../../data/pdfs')));
 // Get current user for database connection
 const currentUser = process.env.USER || process.env.USERNAME || 'postgres';
 
-// PostgreSQL connection with improved configuration
+// PostgreSQL connection
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
   database: process.env.DB_NAME || 'study_planner',
   user: process.env.DB_USER || currentUser,
   password: process.env.DB_PASSWORD || '',
-  ssl: false, // Disable SSL for local development
+  ssl: false,
   max: 10,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
@@ -51,7 +51,7 @@ const initializeDatabase = async () => {
     // Create UUID extension if not exists
     await pool.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
     
-    // Create tables with better error handling
+    // Create basic tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS topics (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -101,7 +101,7 @@ const initializeDatabase = async () => {
       )
     `);
 
-    // Create indexes for better performance
+    // Create indexes
     await pool.query('CREATE INDEX IF NOT EXISTS idx_files_topic_id ON files(topic_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_reading_progress_file_id ON reading_progress(file_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_files_created_at ON files(created_at DESC)');
@@ -142,19 +142,16 @@ const upload = multer({
   }
 });
 
-// Routes
-
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
     res.json({ 
       status: 'healthy', 
-      message: 'Local Study Planner Backend is running with PostgreSQL + Stage 3',
+      message: 'Study Planner Backend is running',
       timestamp: new Date().toISOString(),
       database: 'PostgreSQL connected',
-      user: currentUser,
-      stage: '3 - Focus & Motivation'
+      user: currentUser
     });
   } catch (error) {
     res.status(500).json({ 
@@ -186,38 +183,6 @@ app.post('/api/topics', async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating topic:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.put('/api/topics/:id', async (req, res) => {
-  try {
-    const { name, description, color, icon } = req.body;
-    const { id } = req.params;
-    const result = await pool.query(
-      'UPDATE topics SET name = $1, description = $2, color = $3, icon = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *',
-      [name, description, color, icon, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Topic not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error updating topic:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/topics/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const result = await pool.query('DELETE FROM topics WHERE id = $1', [id]);
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: 'Topic not found' });
-    }
-    res.json({ message: 'Topic deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting topic:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -296,53 +261,6 @@ app.get('/api/files/:id/metadata', async (req, res) => {
   }
 });
 
-app.put('/api/files/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { topic_id, is_favorite } = req.body;
-    const result = await pool.query(
-      'UPDATE files SET topic_id = $1, is_favorite = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *',
-      [topic_id, is_favorite || false, id]
-    );
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error updating file:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete('/api/files/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // Get file info first
-    const fileResult = await pool.query('SELECT * FROM files WHERE id = $1', [id]);
-    if (fileResult.rows.length === 0) {
-      return res.status(404).json({ error: 'File not found' });
-    }
-    
-    const file = fileResult.rows[0];
-    
-    // Delete physical file
-    try {
-      await fs.remove(file.file_path);
-    } catch (fsError) {
-      console.warn('Could not delete physical file:', fsError.message);
-    }
-
-    // Delete from database (progress will be deleted automatically due to CASCADE)
-    await pool.query('DELETE FROM files WHERE id = $1', [id]);
-    
-    res.json({ message: 'File deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting file:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Dashboard stats
 app.get('/api/dashboard/stats', async (req, res) => {
   try {
@@ -367,16 +285,6 @@ app.get('/api/dashboard/stats', async (req, res) => {
     `);
     stats.recentFiles = recentFilesResult.rows;
     
-    // Get topic stats
-    const topicStatsResult = await pool.query(`
-      SELECT t.*, COALESCE(COUNT(f.id), 0) as file_count, COALESCE(SUM(f.page_count), 0) as total_pages
-      FROM topics t
-      LEFT JOIN files f ON t.id = f.topic_id
-      GROUP BY t.id, t.name, t.description, t.color, t.icon, t.created_at, t.updated_at
-      ORDER BY file_count DESC
-    `);
-    stats.topicStats = topicStatsResult.rows;
-    
     res.json(stats);
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
@@ -384,21 +292,26 @@ app.get('/api/dashboard/stats', async (req, res) => {
   }
 });
 
-// Include all previous routes (page tracking, study sessions)
-const pageTrackingRoutes = require('./routes/page-tracking');
-const studySessionRoutes = require('./routes/study-sessions');
-app.use('/api/page-tracking', pageTrackingRoutes);
-app.use('/api/study-sessions', studySessionRoutes);
-
-// Stage 3 routes
-const pomodoroRoutes = require('./routes/pomodoro');
-const userProgressRoutes = require('./routes/user-progress');
-app.use('/api/pomodoro', pomodoroRoutes);
-app.use('/api/user-progress', userProgressRoutes);
-
-// Start session cleanup service
-const { startCleanupService } = require('./services/session-cleanup');
-startCleanupService();
+// Simple user progress endpoint
+app.get('/api/user-progress/stats', async (req, res) => {
+  try {
+    const stats = {
+      total_xp: 0,
+      current_level: 1,
+      current_streak: 0,
+      daily_goal: 60,
+      today_progress: {
+        study_minutes: 0,
+        pages_read: 0,
+        xp_earned: 0
+      }
+    };
+    res.json(stats);
+  } catch (error) {
+    console.error('Error getting user progress:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Error handling middleware
 app.use((error, req, res, next) => {
@@ -413,7 +326,7 @@ app.use((error, req, res, next) => {
 
 // Initialize and start server
 const startServer = async () => {
-  console.log(`🚀 Starting Local Study Planner Backend (Stage 3)...`);
+  console.log(`🚀 Starting Study Planner Backend...`);
   console.log(`👤 Database user: ${currentUser}`);
   
   // Test connection first
@@ -431,10 +344,9 @@ const startServer = async () => {
   
   // Start server
   app.listen(PORT, () => {
-    console.log(`🚀 Local Study Planner Backend (Stage 3) running on port ${PORT}`);
+    console.log(`🚀 Study Planner Backend running on port ${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🐘 Database: PostgreSQL (user: ${currentUser})`);
-    console.log(`🎯 Stage 3 Features: Focus Mode, Pomodoro, XP & Streaks`);
   });
 };
 
@@ -450,199 +362,3 @@ startServer().catch(error => {
   console.error('Failed to start server:', error);
   process.exit(1);
 });
-
-// Focus session routes
-const focusSessionRoutes = require('./routes/focus-sessions');
-app.use('/api/focus-sessions', focusSessionRoutes);
-
-// Comprehensive data persistence routes
-const exercisesRoutes = require('./routes/exercises');
-const studyGoalsRoutes = require('./routes/study-goals');
-const analyticsRoutes = require('./routes/analytics');
-
-app.use('/api/exercises', exercisesRoutes);
-app.use('/api/study-goals', studyGoalsRoutes);
-app.use('/api/analytics', analyticsRoutes);
-
-// Additional endpoints for comprehensive tracking
-app.post('/api/study-contexts', async (req, res) => {
-  try {
-    const {
-      session_id,
-      location,
-      device_used,
-      lighting_condition,
-      noise_level,
-      temperature_comfort,
-      posture,
-      notes
-    } = req.body;
-    
-    const result = await pool.query(
-      `INSERT INTO study_contexts 
-       (session_id, location, device_used, lighting_condition, noise_level, 
-        temperature_comfort, posture, notes) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-       RETURNING *`,
-      [session_id, location, device_used, lighting_condition, noise_level,
-       temperature_comfort, posture, notes]
-    );
-    
-    res.json({ success: true, context: result.rows[0] });
-  } catch (error) {
-    console.error('Error saving study context:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/page-interactions', async (req, res) => {
-  try {
-    const {
-      session_id,
-      page_number,
-      interaction_type,
-      interaction_start,
-      notes,
-      content_excerpt
-    } = req.body;
-    
-    const result = await pool.query(
-      `INSERT INTO page_interactions 
-       (session_id, page_number, interaction_type, interaction_start, notes, content_excerpt) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
-       RETURNING *`,
-      [session_id, page_number, interaction_type, interaction_start, notes, content_excerpt]
-    );
-    
-    res.json({ success: true, interaction: result.rows[0] });
-  } catch (error) {
-    console.error('Error saving page interaction:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/study-reflections', async (req, res) => {
-  try {
-    const {
-      session_id,
-      what_went_well,
-      what_was_challenging,
-      key_insights,
-      concepts_mastered,
-      concepts_need_work,
-      study_strategy_effectiveness,
-      motivation_level,
-      action_items,
-      next_session_plan
-    } = req.body;
-    
-    const result = await pool.query(
-      `INSERT INTO study_reflections 
-       (session_id, what_went_well, what_was_challenging, key_insights, 
-        concepts_mastered, concepts_need_work, study_strategy_effectiveness, 
-        motivation_level, action_items, next_session_plan) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-       RETURNING *`,
-      [session_id, what_went_well, what_was_challenging, key_insights,
-       concepts_mastered, concepts_need_work, study_strategy_effectiveness,
-       motivation_level, action_items, next_session_plan]
-    );
-    
-    res.json({ success: true, reflection: result.rows[0] });
-  } catch (error) {
-    console.error('Error saving study reflection:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Backup and export endpoints
-app.get('/api/data/export', async (req, res) => {
-  try {
-    const { format = 'json' } = req.query;
-    
-    // Export all user data
-    const data = {
-      topics: (await pool.query('SELECT * FROM topics ORDER BY created_at')).rows,
-      files: (await pool.query('SELECT * FROM files ORDER BY created_at')).rows,
-      study_sessions: (await pool.query('SELECT * FROM study_sessions ORDER BY session_start')).rows,
-      user_progress: (await pool.query('SELECT * FROM user_progress ORDER BY date')).rows,
-      exercises: (await pool.query('SELECT * FROM exercises ORDER BY created_at')).rows,
-      study_goals: (await pool.query('SELECT * FROM study_goals ORDER BY created_at')).rows,
-      settings: (await pool.query('SELECT * FROM user_settings')).rows,
-      exported_at: new Date().toISOString()
-    };
-    
-    if (format === 'csv') {
-      // Convert to CSV format for each table
-      res.setHeader('Content-Type', 'application/zip');
-      res.setHeader('Content-Disposition', 'attachment; filename=study_data_export.zip');
-      // Implementation for ZIP with CSV files would go here
-      res.json({ message: 'CSV export not yet implemented' });
-    } else {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', 'attachment; filename=study_data_export.json');
-      res.json(data);
-    }
-    
-  } catch (error) {
-    console.error('Error exporting data:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Stage 4 routes
-const achievementsRoutes = require('./routes/achievements');
-const recommendationsRoutes = require('./routes/recommendations');
-const milestonesRoutes = require('./routes/milestones');
-
-app.use('/api/achievements', achievementsRoutes);
-app.use('/api/recommendations', recommendationsRoutes);
-app.use('/api/milestones', milestonesRoutes);
-
-// Enhanced dashboard stats with Stage 4 data
-app.get('/api/dashboard/stage4-stats', async (req, res) => {
-  try {
-    const stats = {};
-    
-    // Achievement stats
-    const achievementStats = await pool.query(`
-      SELECT 
-        COUNT(*) as total_achievements,
-        COUNT(*) FILTER (WHERE ua.id IS NOT NULL) as unlocked_achievements,
-        COALESCE(SUM(a.xp_reward) FILTER (WHERE ua.id IS NOT NULL), 0) as achievement_xp
-      FROM achievements a
-      LEFT JOIN user_achievements ua ON a.id = ua.achievement_id
-    `);
-    
-    // Today's recommendations
-    const recommendationStats = await pool.query(`
-      SELECT 
-        COUNT(*) as total_recommendations,
-        COUNT(*) FILTER (WHERE is_completed = true) as completed_recommendations
-      FROM daily_recommendations 
-      WHERE date = CURRENT_DATE
-    `);
-    
-    // Recent milestones
-    const recentMilestones = await pool.query(`
-      SELECT * FROM study_milestones 
-      WHERE last_triggered IS NOT NULL 
-      ORDER BY last_triggered DESC 
-      LIMIT 3
-    `);
-    
-    stats.achievements = achievementStats.rows[0];
-    stats.daily_recommendations = recommendationStats.rows[0];
-    stats.recent_milestones = recentMilestones.rows;
-    
-    res.json(stats);
-  } catch (error) {
-    console.error('Error getting Stage 4 stats:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Stage 5: Notes routes
-const notesRoutes = require('./routes/notes');
-app.use('/api/notes', notesRoutes);
-

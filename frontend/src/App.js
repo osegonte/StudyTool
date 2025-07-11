@@ -4,13 +4,7 @@ import AppleNavigation from './components/apple/AppleNavigation';
 import AppleDashboard from './components/apple/AppleDashboard';
 import DocumentManager from './components/DocumentManager';
 import TopicManager from './components/TopicManager';
-import SprintPage from './components/SprintPage';
-import AnalyticsPage from './components/AnalyticsPage';
-import SettingsPage from './components/SettingsPage';
-import AppleReaderInterface from './components/AppleReaderInterface';
-import AchievementDisplay from './components/AchievementDisplay';
-import NotesPage from './pages/notes/NotesPage';
-import './styles/apple/design-system.css';
+import './styles/App.css';
 
 function App() {
   return (
@@ -22,12 +16,6 @@ function App() {
             <Route path="/" element={<AppleDashboard />} />
             <Route path="/files" element={<DocumentManager />} />
             <Route path="/topics" element={<TopicManager />} />
-            <Route path="/sprints" element={<SprintPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/notes/*" element={<NotesPage />} />
-            <Route path="/achievements" element={<AchievementDisplay />} />
-            <Route path="/viewer/:fileId" element={<AppleReaderInterface />} />
           </Routes>
         </main>
       </div>
